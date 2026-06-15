@@ -13,8 +13,7 @@ import {
   Trash2,
   Sparkles,
   Printer,
-  X,
-  FileDown
+  X
 } from 'lucide-react';
 import { API_BASE } from '../config';
 

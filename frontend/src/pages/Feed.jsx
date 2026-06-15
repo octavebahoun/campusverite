@@ -16,7 +16,6 @@ import {
   ThumbsUp,
 } from 'lucide-react';
 import { API_BASE } from '../config';
-import heroImage from '../assets/hero.webp';
 import { getOrCreatePseudo, resetPseudo } from '../utils/pseudo';
 import AvisCard from '../components/AvisCard';
 import FiltreBar from '../components/FiltreBar';

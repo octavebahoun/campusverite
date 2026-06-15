@@ -4,7 +4,6 @@ import { BrowserRouter, Link, NavLink, Route, Routes } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   Activity,
-  Eye,
   FileText,
   MessageSquare,
   Moon,
@@ -63,14 +62,14 @@ export default function App() {
         <header className="topbar">
           <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 md:px-8">
             <Link to="/" className="flex min-w-0 items-center gap-3">
-              <motion.span
+              <motion.div
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 transition={{ type: "spring", stiffness: 400, damping: 17 }}
-                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-brand text-white shadow-md"
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md overflow-hidden bg-brand shadow-md"
               >
-                <Eye className="h-5 w-5" />
-              </motion.span>
+                <img src="/logo.webp" alt="Logo CampusVérité" className="h-full w-full object-cover" />
+              </motion.div>
               <span className="min-w-0">
                 <span className="block truncate text-base font-extrabold tracking-tight text-white-off">
                   CampusVérité
@@ -139,8 +138,8 @@ export default function App() {
             {/* Branding Column */}
             <div className="space-y-4">
               <div className="flex items-center gap-2">
-                <span className="flex h-7 w-7 items-center justify-center rounded-md bg-[rgba(var(--color-brand-rgb),0.12)] text-brand shadow-sm">
-                  <Eye className="h-4 w-4" />
+                <span className="flex h-7 w-7 items-center justify-center rounded-md overflow-hidden bg-[rgba(var(--color-brand-rgb),0.12)] shadow-sm">
+                  <img src="/logo.webp" alt="Logo" className="h-full w-full object-cover" />
                 </span>
                 <span className="font-display font-bold text-lg text-white-off tracking-tight">
                   Campus<span className="text-brand">Vérité</span>
