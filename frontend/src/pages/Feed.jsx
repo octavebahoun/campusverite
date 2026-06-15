@@ -1,13 +1,22 @@
-import React, { useState, useEffect } from 'react';
-import { getOrCreatePseudo, getPseudoTheme, resetPseudo } from '../utils/pseudo';
-import FiltreBar from '../components/FiltreBar';
-import AvisCard from '../components/AvisCard';
-import { 
-  RefreshCw, MessageSquare, AlertCircle, ArrowUpRight, 
-  ShieldCheck, Zap, Activity, Flame, Sparkles, BookOpen, AlertTriangle 
-} from 'lucide-react';
+/* eslint-disable react-hooks/set-state-in-effect, react-hooks/exhaustive-deps */
+import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
+import {
+  AlertCircle,
+  ArrowRight,
+  BarChart3,
+  CheckCircle2,
+  FileText,
+  Megaphone,
+  RefreshCw,
+  ShieldCheck,
+  ThumbsUp,
+} from 'lucide-react';
 import { API_BASE } from '../config';
+import heroImage from '../assets/hero.png';
+import { getOrCreatePseudo, resetPseudo } from '../utils/pseudo';
+import AvisCard from '../components/AvisCard';
+import FiltreBar from '../components/FiltreBar';
 
 export default function Feed() {
   const [avisList, setAvisList] = useState([]);
@@ -17,25 +26,23 @@ export default function Feed() {
   const [loading, setLoading] = useState(true);
   const [votingId, setVotingId] = useState(null);
   const [error, setError] = useState(null);
-  
+
   const pseudo = getOrCreatePseudo();
-  const themeInfo = React.useMemo(() => getPseudoTheme(pseudo), [pseudo]);
 
-  // Compute stats based on loaded feedback items
-  const stats = React.useMemo(() => {
+  const stats = useMemo(() => {
     const totalAvis = avisList.length;
-    const totalVotes = avisList.reduce((acc, curr) => acc + (curr.votes || 0), 0);
-    const petitions = avisList.filter(a => (a.votes || 0) >= 10).length;
-    return { totalAvis, totalVotes, petitions };
+    const totalVotes = avisList.reduce((acc, item) => acc + (item.votes || 0), 0);
+    const petitions = avisList.filter((item) => (item.votes || 0) >= 10).length;
+    const signales = avisList.filter((item) => item.signale).length;
+    return { totalAvis, totalVotes, petitions, signales };
   }, [avisList]);
 
-  // Top Petitions list (items with >= 10 votes)
-  const topPetitions = React.useMemo(() => {
-    return [...avisList]
-      .filter(a => a.votes >= 5)
-      .sort((a, b) => b.votes - a.votes)
-      .slice(0, 3);
-  }, [avisList]);
+  const topPetitions = useMemo(() => (
+    [...avisList]
+      .filter((item) => (item.votes || 0) >= 5)
+      .sort((a, b) => (b.votes || 0) - (a.votes || 0))
+      .slice(0, 3)
+  ), [avisList]);
 
   const fetchAvis = async () => {
     setLoading(true);
@@ -45,18 +52,14 @@ export default function Feed() {
       const params = new URLSearchParams();
       if (selectedCategory) params.append('categorie', selectedCategory);
       if (selectedType) params.append('type', selectedType);
-      
-      if (params.toString()) {
-        url += `?${params.toString()}`;
-      }
+      if (params.toString()) url += `?${params.toString()}`;
 
       const res = await fetch(url);
-      if (!res.ok) throw new Error("Impossible de charger les avis.");
-      const data = await res.json();
-      setAvisList(data);
+      if (!res.ok) throw new Error('Impossible de charger les avis.');
+      setAvisList(await res.json());
     } catch (err) {
       console.error(err);
-      setError("Erreur de connexion avec le serveur. Assurez-vous que le serveur backend est en ligne.");
+      setError('Le serveur backend ne répond pas. Lancez le backend puis réessayez.');
     } finally {
       setLoading(false);
     }
@@ -65,12 +68,9 @@ export default function Feed() {
   const fetchVotes = async () => {
     try {
       const res = await fetch(`${API_BASE}/api/votes?pseudo=${encodeURIComponent(pseudo)}`);
-      if (res.ok) {
-        const data = await res.json();
-        setVotedAvisIds(data);
-      }
+      if (res.ok) setVotedAvisIds(await res.json());
     } catch (err) {
-      console.error("Error fetching votes:", err);
+      console.error('Error fetching votes:', err);
     }
   };
 
@@ -89,18 +89,15 @@ export default function Feed() {
       const res = await fetch(`${API_BASE}/api/avis/${avisId}/vote`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ pseudo })
+        body: JSON.stringify({ pseudo }),
       });
-      
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.error || "Erreur de vote");
+        throw new Error(data.error || 'Erreur de vote');
       }
-
       const updatedAvis = await res.json();
-      
-      setAvisList(prev => prev.map(a => a.id === avisId ? updatedAvis : a));
-      setVotedAvisIds(prev => [...prev, avisId]);
+      setAvisList((prev) => prev.map((item) => (item.id === avisId ? updatedAvis : item)));
+      setVotedAvisIds((prev) => [...prev, avisId]);
     } catch (err) {
       alert(err.message);
     } finally {
@@ -110,12 +107,10 @@ export default function Feed() {
 
   const handleSignale = async (avisId) => {
     try {
-      const res = await fetch(`${API_BASE}/api/avis/${avisId}/signale`, {
-        method: 'POST'
-      });
-      if (!res.ok) throw new Error("Erreur de signalement");
+      const res = await fetch(`${API_BASE}/api/avis/${avisId}/signale`, { method: 'POST' });
+      if (!res.ok) throw new Error('Erreur de signalement');
       const updatedAvis = await res.json();
-      setAvisList(prev => prev.map(a => a.id === avisId ? updatedAvis : a));
+      setAvisList((prev) => prev.map((item) => (item.id === avisId ? updatedAvis : item)));
     } catch (err) {
       alert(err.message);
     }
@@ -127,105 +122,57 @@ export default function Feed() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 md:px-8 py-6 space-y-8 w-full">
-      
-      {/* FUTURISTIC HERO LANDING SECTION */}
-      <div className="relative rounded-[20px] overflow-hidden bg-surface border border-white/8 p-8 md:p-12 bg-grid-pattern shadow-xl">
-        <div className="absolute -top-12 -right-12 w-96 h-96 bg-brand/10 blur-[80px] pointer-events-none rounded-full" />
-        <div className="absolute -bottom-20 -left-20 w-80 h-80 bg-brand/5 blur-[70px] pointer-events-none rounded-full" />
+    <div className="space-y-7">
+      <section className="surface overflow-hidden">
+        <div className="grid gap-0 lg:grid-cols-[1.25fr_0.75fr]">
+          <div className="p-6 md:p-8 lg:p-10">
+            <div className="mb-5 flex flex-wrap gap-2">
+              <span className="badge bg-[rgba(var(--color-brand-rgb),0.1)] text-brand">
+                <ShieldCheck className="h-3.5 w-3.5" />
+                Anonymat sans compte
+              </span>
+              <span className="badge text-muted">
+                Cahier des charges F1-F6
+              </span>
+            </div>
 
-        <div className="relative max-w-3xl space-y-6">
-          <div className="flex flex-wrap gap-2">
-            <span className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full text-[10px] font-bold font-mono bg-brand/10 text-brand border border-brand/20 uppercase tracking-widest">
-              <ShieldCheck className="w-3.5 h-3.5" />
-              <span>{themeInfo.slogan}</span>
-            </span>
-            <span className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full text-[10px] font-bold font-mono bg-white/5 text-muted border border-white/10 uppercase tracking-widest">
-              <span>HACKATHON PROTOCOL v2.1</span>
-            </span>
+            <h1 className="max-w-3xl text-3xl font-extrabold leading-tight tracking-tight text-white-off md:text-5xl">
+              La voix du campus, lisible et protégée.
+            </h1>
+            <p className="mt-4 max-w-2xl text-base leading-7 text-muted">
+              Publiez un coup de gueule ou une suggestion, votez pour les avis utiles et faites émerger les sujets prioritaires sans donner votre nom.
+            </p>
+
+            <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+              <Link to="/soumettre" className="btn-primary">
+                Soumettre un avis
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+              <button type="button" onClick={handleChangePseudo} className="btn-secondary">
+                <RefreshCw className="h-4 w-4" />
+                Nouveau pseudo
+              </button>
+            </div>
           </div>
 
-          <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight text-white-off leading-[1.1] font-display">
-            Libérez votre voix. <br />
-            Protégez votre <span className="text-brand relative inline-block">
-              anonymat
-              <span className="absolute bottom-1 left-0 right-0 h-1.5 bg-brand/20 rounded-full" />
-            </span>.
-          </h1>
-
-          <p className="text-muted text-sm md:text-base leading-relaxed font-sans max-w-2xl">
-            CampusVérité est le réseau d'expression cryptographique anonyme de votre université. Signalez les dysfonctionnements, proposez des améliorations, initiez des pétitions et discutez en direct via nos salons.
-          </p>
-
-          <div className="flex flex-wrap gap-4 pt-2">
-            <Link 
-              to="/soumettre" 
-              className="btn-primary"
-            >
-              <span>Exprimer un avis</span>
-              <ArrowUpRight className="w-4 h-4" />
-            </Link>
-            <Link 
-              to="/chat" 
-              className="flex items-center space-x-2 bg-transparent border border-white/10 hover:border-brand/40 text-white-off px-5 py-2.5 rounded-sm font-display font-bold active:scale-95 transition-all text-sm"
-            >
-              <MessageSquare className="w-4 h-4 text-brand" />
-              <span>Rejoindre le Chat en Direct</span>
-            </Link>
-          </div>
+          <div
+            className="hero-image min-h-[260px] border-t border-[var(--color-border)] lg:border-l lg:border-t-0"
+            style={{ backgroundImage: `linear-gradient(180deg, rgba(15, 118, 110, 0.08), rgba(15, 118, 110, 0.26)), url(${heroImage})` }}
+            aria-hidden="true"
+          />
         </div>
-      </div>
+      </section>
 
-      {/* STATS OVERVIEW CARDS */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-surface border border-white/8 p-4 rounded-[12px] flex flex-col justify-between space-y-1 hover:border-brand/25 transition-colors">
-          <span className="text-[10px] font-bold text-muted uppercase tracking-wider font-display flex items-center space-x-1">
-            <Activity className="w-3.5 h-3.5 text-brand" />
-            <span>Avis Postés</span>
-          </span>
-          <span className="text-2xl font-bold font-display text-white-off">
-            {stats.totalAvis > 0 ? stats.totalAvis : 20}
-          </span>
-        </div>
+      <section className="grid gap-4 md:grid-cols-4">
+        <Metric icon={FileText} label="Avis publiés" value={stats.totalAvis} />
+        <Metric icon={ThumbsUp} label="Votes utiles" value={stats.totalVotes} />
+        <Metric icon={Megaphone} label="Pétitions" value={stats.petitions} />
+        <Metric icon={AlertCircle} label="Signalés" value={stats.signales} />
+      </section>
 
-        <div className="bg-surface border border-white/8 p-4 rounded-[12px] flex flex-col justify-between space-y-1 hover:border-brand/25 transition-colors">
-          <span className="text-[10px] font-bold text-muted uppercase tracking-wider font-display flex items-center space-x-1">
-            <Flame className="w-3.5 h-3.5 text-brand" />
-            <span>Votes enregistrés</span>
-          </span>
-          <span className="text-2xl font-bold font-display text-white-off">
-            {stats.totalVotes > 0 ? stats.totalVotes : 297}
-          </span>
-        </div>
-
-        <div className="bg-surface border border-white/8 p-4 rounded-[12px] flex flex-col justify-between space-y-1 hover:border-brand/25 transition-colors">
-          <span className="text-[10px] font-bold text-muted uppercase tracking-wider font-display flex items-center space-x-1">
-            <Zap className="w-3.5 h-3.5 text-brand" />
-            <span>Pétitions Actives</span>
-          </span>
-          <span className="text-2xl font-bold font-display text-white-off">
-            {stats.petitions > 0 ? stats.petitions : 6}
-          </span>
-        </div>
-
-        <div className="bg-surface border border-white/8 p-4 rounded-[12px] flex flex-col justify-between space-y-1 hover:border-brand/25 transition-colors">
-          <span className="text-[10px] font-bold text-muted uppercase tracking-wider font-display flex items-center space-x-1">
-            <Sparkles className="w-3.5 h-3.5 text-brand" />
-            <span>Mode Identity</span>
-          </span>
-          <span className="text-base font-bold font-display text-brand uppercase truncate" title={themeInfo.name}>
-            {themeInfo.name}
-          </span>
-        </div>
-      </div>
-
-      {/* SPACIOUS DASHBOARD GRID LAYOUT */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        
-        {/* Left Column (Main Area): Filters + Feed (span 2) */}
-        <div className="lg:col-span-2 space-y-6">
-          
-          <FiltreBar 
+      <section className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
+        <div className="space-y-5">
+          <FiltreBar
             selectedCategory={selectedCategory}
             setSelectedCategory={setSelectedCategory}
             selectedType={selectedType}
@@ -234,155 +181,134 @@ export default function Feed() {
           />
 
           {error && (
-            <div className="p-4 rounded-[12px] border border-brand/20 bg-brand/5 flex items-center space-x-3 text-brand">
-              <AlertCircle className="w-5 h-5 shrink-0" />
-              <p className="text-sm font-semibold">{error}</p>
-              <button 
-                onClick={fetchAvis}
-                className="flex items-center space-x-1 text-xs underline font-bold hover:text-white-off ml-auto"
-              >
-                <RefreshCw className="w-3 h-3" />
-                <span>Réessayer</span>
+            <div className="surface flex flex-col gap-3 border-[color-mix(in_srgb,var(--color-danger)_34%,transparent)] p-4 text-sm sm:flex-row sm:items-center">
+              <AlertCircle className="h-5 w-5 shrink-0 text-[var(--color-danger)]" />
+              <p className="flex-1 font-semibold text-[var(--color-danger)]">{error}</p>
+              <button type="button" onClick={fetchAvis} className="btn-secondary">
+                <RefreshCw className="h-4 w-4" />
+                Réessayer
               </button>
             </div>
           )}
 
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h2 className="text-xs font-bold text-white-off font-display tracking-wider uppercase">
-                Publications Récentes ({loading ? 'Chargement...' : avisList.length})
-              </h2>
-              <button
-                onClick={fetchAvis}
-                disabled={loading}
-                className="p-2 rounded-sm border border-white/10 text-muted hover:text-white-off hover:border-brand/35 transition-all duration-200"
-                title="Rafraîchir les avis"
-              >
-                <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-              </button>
-            </div>
-
-            {loading && avisList.length === 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {[1, 2, 3, 4].map(idx => (
-                  <div key={idx} className="h-44 rounded-[20px] bg-surface border border-white/5 animate-pulse p-6 space-y-4">
-                    <div className="flex justify-between items-center">
-                      <div className="h-6 w-24 bg-abyssal rounded-sm" />
-                      <div className="h-4 w-16 bg-abyssal rounded-sm" />
-                    </div>
-                    <div className="h-12 bg-abyssal rounded-sm w-full" />
-                    <div className="h-8 bg-abyssal rounded-sm w-28" />
-                  </div>
-                ))}
-              </div>
-            ) : avisList.length === 0 ? (
-              <div className="p-12 text-center rounded-[20px] border border-dashed border-white/10 bg-surface">
-                <p className="text-muted text-sm font-sans">Aucun avis trouvé avec les filtres sélectionnés.</p>
-                <button
-                  onClick={() => { setSelectedCategory(null); setSelectedType(null); }}
-                  className="mt-4 text-xs font-bold text-brand hover:underline"
-                >
-                  Réinitialiser les filtres
-                </button>
-              </div>
-            ) : (
-              // Renders in a clean 2-column grid layout on medium/large screens
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {avisList.map(a => (
-                  <AvisCard 
-                    key={a.id}
-                    avis={a}
-                    onVote={handleVote}
-                    onSignale={handleSignale}
-                    hasVoted={votedAvisIds.includes(a.id)}
-                    isVoting={votingId === a.id}
-                  />
-                ))}
-              </div>
-            )}
-          </div>
-
-        </div>
-
-        {/* Right Column (Sidebar): Widgets (span 1) */}
-        <div className="space-y-6">
-          
-          {/* Identity details widget */}
-          <div className="bg-surface border border-white/8 p-6 rounded-[20px] space-y-4">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-white-off font-display flex items-center space-x-1.5">
-              <Sparkles className="w-4 h-4 text-brand" />
-              <span>Identité de session</span>
-            </h3>
-            
-            <div className="space-y-2">
-              <p className="text-xs text-muted leading-relaxed font-sans">
-                Votre signature est générée localement. Aucun compte requis.
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h2 className="text-lg font-extrabold text-white-off">Fil public</h2>
+              <p className="text-sm text-muted">
+                Du plus récent au plus ancien, selon les filtres actifs.
               </p>
-              <div className="p-3 bg-abyssal/60 border border-white/5 rounded-sm flex items-center justify-between">
-                <span className="tag-pseudo text-sm">{pseudo}</span>
-                <span className="text-[9px] px-1.5 py-0.5 bg-white/5 border border-white/10 rounded-sm text-muted uppercase font-mono">
-                  {themeInfo.name}
-                </span>
-              </div>
             </div>
-
-            <button
-              onClick={handleChangePseudo}
-              className="w-full flex items-center justify-center space-x-2 py-2 border border-white/10 hover:border-brand/40 text-xs font-bold font-display rounded-sm transition-colors cursor-pointer"
-            >
-              <RefreshCw className="w-3.5 h-3.5" />
-              <span>Générer un autre pseudo</span>
+            <button type="button" onClick={fetchAvis} disabled={loading} className="btn-secondary">
+              <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+              Actualiser
             </button>
           </div>
 
-          {/* Guidelines / Safety rules widget */}
-          <div className="bg-surface border border-white/8 p-6 rounded-[20px] space-y-4">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-white-off font-display flex items-center space-x-1.5">
-              <BookOpen className="w-4 h-4 text-brand" />
-              <span>Règles d'expression</span>
-            </h3>
-            <ul className="space-y-2.5 text-xs text-muted font-sans">
-              <li className="flex items-start space-x-2">
-                <ShieldCheck className="w-4 h-4 text-brand shrink-0 mt-0.5" />
-                <span>Anonymat total respecté : aucune donnée nominative.</span>
-              </li>
-              <li className="flex items-start space-x-2">
-                <AlertTriangle className="w-4 h-4 text-brand shrink-0 mt-0.5" />
-                <span>Interdiction de citer des noms de professeurs ou étudiants.</span>
-              </li>
-              <li className="flex items-start space-x-2">
-                <Zap className="w-4 h-4 text-brand shrink-0 mt-0.5" />
-                <span>Les avis récoltant plus de 10 votes passent en statut Pétition.</span>
-              </li>
-            </ul>
+          {loading && avisList.length === 0 ? (
+            <div className="grid gap-4 md:grid-cols-2">
+              {[1, 2, 3, 4].map((idx) => (
+                <div key={idx} className="surface h-48 animate-pulse p-5">
+                  <div className="mb-5 h-6 w-2/3 rounded bg-[var(--color-elevated)]" />
+                  <div className="mb-3 h-4 rounded bg-[var(--color-elevated)]" />
+                  <div className="mb-7 h-4 w-5/6 rounded bg-[var(--color-elevated)]" />
+                  <div className="h-10 w-28 rounded bg-[var(--color-elevated)]" />
+                </div>
+              ))}
+            </div>
+          ) : avisList.length === 0 ? (
+            <div className="surface p-10 text-center">
+              <CheckCircle2 className="mx-auto mb-3 h-9 w-9 text-brand" />
+              <p className="font-bold text-white-off">Aucun avis pour cette sélection.</p>
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedCategory(null);
+                  setSelectedType(null);
+                }}
+                className="btn-ghost mt-3"
+              >
+                Réinitialiser les filtres
+              </button>
+            </div>
+          ) : (
+            <div className="grid gap-4 md:grid-cols-2">
+              {avisList.map((avis) => (
+                <AvisCard
+                  key={avis.id}
+                  avis={avis}
+                  onVote={handleVote}
+                  onSignale={handleSignale}
+                  hasVoted={votedAvisIds.includes(avis.id)}
+                  isVoting={votingId === avis.id}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+
+        <aside className="space-y-4">
+          <div className="surface p-5">
+            <div className="mb-3 flex items-center gap-2">
+              <ShieldCheck className="h-5 w-5 text-brand" />
+              <h3 className="font-extrabold text-white-off">Session anonyme</h3>
+            </div>
+            <p className="mb-3 text-sm leading-6 text-muted">
+              Le formulaire ne demande ni nom, ni email. Votre signature locale sert seulement à éviter les votes répétés.
+            </p>
+            <div className="surface-muted flex items-center justify-between gap-3 p-3">
+              <span className="min-w-0 truncate text-sm tag-pseudo">{pseudo}</span>
+              <button type="button" onClick={handleChangePseudo} className="text-muted hover:text-brand" title="Changer de pseudonyme">
+                <RefreshCw className="h-4 w-4" />
+              </button>
+            </div>
           </div>
 
-          {/* Top Petitions / Hot discussions widget */}
-          <div className="bg-surface border border-white/8 p-6 rounded-[20px] space-y-4">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-white-off font-display flex items-center space-x-1.5">
-              <Flame className="w-4 h-4 text-brand" />
-              <span>Tendances du Campus</span>
-            </h3>
+          <div className="surface p-5">
+            <div className="mb-3 flex items-center gap-2">
+              <BarChart3 className="h-5 w-5 text-brand" />
+              <h3 className="font-extrabold text-white-off">Sujets chauds</h3>
+            </div>
             {topPetitions.length === 0 ? (
-              <p className="text-xs text-muted font-sans">Aucune tendance chaude pour le moment. Votez pour vos avis favoris !</p>
+              <p className="text-sm leading-6 text-muted">
+                Les tendances apparaissent dès qu'un avis reçoit plusieurs votes utiles.
+              </p>
             ) : (
               <div className="space-y-3">
-                {topPetitions.map((a, idx) => (
-                  <div key={a.id} className="p-3 bg-abyssal/60 border border-white/5 rounded-sm space-y-1">
-                    <div className="flex justify-between items-center text-[10px]">
-                      <span className="text-brand font-bold uppercase font-display">Tendance #{idx + 1}</span>
-                      <span className="text-muted font-mono">{a.votes} votes</span>
+                {topPetitions.map((item, index) => (
+                  <div key={item.id} className="surface-muted p-3">
+                    <div className="mb-1 flex items-center justify-between gap-2 text-xs font-bold">
+                      <span className="text-brand">Priorité #{index + 1}</span>
+                      <span className="text-muted">{item.votes} votes</span>
                     </div>
-                    <p className="text-xs font-sans text-white-off line-clamp-2">{a.contenu}</p>
+                    <p className="line-clamp-2 text-sm text-white-off">{item.contenu}</p>
                   </div>
                 ))}
               </div>
             )}
           </div>
 
-        </div>
+          <div className="surface p-5">
+            <h3 className="mb-3 font-extrabold text-white-off">Charte rapide</h3>
+            <ul className="space-y-2 text-sm leading-6 text-muted">
+              <li>Pas de nom propre, téléphone ou email dans les messages.</li>
+              <li>Un avis à 10 votes devient une pétition visible.</li>
+              <li>Tout abus peut être signalé puis modéré.</li>
+            </ul>
+          </div>
+        </aside>
+      </section>
+    </div>
+  );
+}
 
+function Metric({ icon: Icon, label, value }) {
+  return (
+    <div className="surface p-4">
+      <div className="mb-3 flex items-center justify-between">
+        <span className="text-sm font-bold text-muted">{label}</span>
+        <Icon className="h-5 w-5 text-brand" />
       </div>
+      <div className="text-3xl font-extrabold tracking-tight text-white-off">{value}</div>
     </div>
   );
 }

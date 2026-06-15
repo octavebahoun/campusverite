@@ -1,28 +1,44 @@
-import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { getOrCreatePseudo } from '../utils/pseudo';
-import { ArrowLeft, AlertTriangle, Send, CheckCircle } from 'lucide-react';
+import { useMemo, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import {
+  AlertTriangle,
+  ArrowLeft,
+  Building,
+  CheckCircle2,
+  FileText,
+  Flame,
+  GraduationCap,
+  Lightbulb,
+  Send,
+  ShieldCheck,
+  Wrench,
+} from 'lucide-react';
 import { API_BASE } from '../config';
+import { getOrCreatePseudo } from '../utils/pseudo';
 
-const CATEGORIES = ["Pédagogie", "Infrastructure", "Administration", "Équipements"];
+const CATEGORIES = [
+  { name: 'Pédagogie', icon: GraduationCap },
+  { name: 'Infrastructure', icon: Building },
+  { name: 'Administration', icon: FileText },
+  { name: 'Équipements', icon: Wrench },
+];
 
 export default function Soumettre() {
   const navigate = useNavigate();
-  const [categorie, setCategorie] = useState(CATEGORIES[0]);
+  const [categorie, setCategorie] = useState(CATEGORIES[0].name);
   const [type, setType] = useState('coup_de_gueule');
   const [contenu, setContenu] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
-
   const pseudo = getOrCreatePseudo();
+
+  const remaining = useMemo(() => Math.max(10 - contenu.trim().length, 0), [contenu]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!contenu.trim()) return;
-
     if (contenu.trim().length < 10) {
-      setError("Le contenu doit faire au moins 10 caractères.");
+      setError('Le contenu doit faire au moins 10 caractères.');
       return;
     }
 
@@ -32,18 +48,16 @@ export default function Soumettre() {
       const res = await fetch(`${API_BASE}/api/avis`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ categorie, type, contenu: contenu.trim() })
+        body: JSON.stringify({ categorie, type, contenu: contenu.trim() }),
       });
 
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.error || "Erreur de soumission");
+        throw new Error(data.error || 'Erreur de soumission');
       }
 
       setSuccess(true);
-      setTimeout(() => {
-        navigate('/');
-      }, 1500);
+      setTimeout(() => navigate('/'), 1200);
     } catch (err) {
       setError(err.message || "Impossible de soumettre l'avis. Vérifiez la connexion.");
     } finally {
@@ -52,153 +66,156 @@ export default function Soumettre() {
   };
 
   return (
-    <div className="max-w-[760px] mx-auto px-4 py-8 space-y-6">
-      
-      {/* Back to Feed */}
-      <Link 
-        to="/" 
-        className="flex items-center space-x-2 text-muted hover:text-white-off transition-colors duration-200 text-sm w-fit font-semibold"
-      >
-        <ArrowLeft className="w-4 h-4" />
-        <span>Retour au fil d'actualité</span>
+    <div className="mx-auto max-w-5xl space-y-5">
+      <Link to="/" className="btn-ghost w-fit">
+        <ArrowLeft className="h-4 w-4" />
+        Retour au fil public
       </Link>
 
-      <div className="bg-surface p-8 rounded-[20px] border border-white/8 space-y-6 relative overflow-hidden">
-        {/* Decorative subtle brand gradient accent */}
-        <div className="absolute top-0 right-0 w-64 h-64 bg-brand/5 blur-3xl pointer-events-none rounded-full" />
-        
-        <div className="space-y-2">
-          <h1 className="text-2xl md:text-3xl font-extrabold text-white-off font-display tracking-wide uppercase">
-            Exprimer un avis anonyme
-          </h1>
-          <p className="text-xs md:text-sm text-muted font-sans">
-            Votre publication sera associée au pseudonyme de session <span className="tag-pseudo">{pseudo}</span>.
-          </p>
-        </div>
-
-        {/* Success Alert */}
-        {success ? (
-          <div className="p-6 rounded-sm bg-success/10 border border-success/20 text-center space-y-3 flex flex-col items-center">
-            <CheckCircle className="w-12 h-12 text-success animate-bounce" />
-            <h3 className="text-lg font-bold text-white-off font-display uppercase tracking-wider">Avis publié avec succès !</h3>
-            <p className="text-sm text-muted">Redirection vers le fil d'actualité...</p>
+      <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
+        <section className="surface p-5 md:p-7">
+          <div className="mb-6">
+            <p className="mb-2 text-sm font-extrabold text-brand">Soumission anonyme</p>
+            <h1 className="text-2xl font-extrabold tracking-tight text-white-off md:text-3xl">
+              Déposer un avis sans identité.
+            </h1>
+            <p className="mt-3 text-sm leading-6 text-muted">
+              Votre message sera publié avec un pseudonyme de session, jamais avec un nom, email ou numéro.
+            </p>
           </div>
-        ) : (
-          <form onSubmit={handleSubmit} className="space-y-6">
-            
-            {/* Category Select */}
-            <div className="space-y-2">
-              <label className="block text-xs font-bold uppercase tracking-wider text-muted font-display">
-                Catégorie
-              </label>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                {CATEGORIES.map(cat => (
+
+          {success ? (
+            <div className="surface-muted p-8 text-center">
+              <CheckCircle2 className="mx-auto mb-3 h-12 w-12 text-success" />
+              <h2 className="text-xl font-extrabold text-white-off">Avis publié</h2>
+              <p className="mt-2 text-sm text-muted">Redirection vers le fil public...</p>
+            </div>
+          ) : (
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <fieldset className="space-y-3">
+                <legend className="text-sm font-extrabold text-white-off">Catégorie</legend>
+                <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+                  {CATEGORIES.map((category) => {
+                    const Icon = category.icon;
+                    const active = categorie === category.name;
+                    return (
+                      <button
+                        key={category.name}
+                        type="button"
+                        onClick={() => setCategorie(category.name)}
+                        className={`min-h-20 rounded-md border p-3 text-left transition ${
+                          active
+                            ? 'border-brand bg-[rgba(var(--color-brand-rgb),0.1)] text-brand'
+                            : 'border-[var(--color-border)] text-muted hover:border-[rgba(var(--color-brand-rgb),0.45)] hover:text-brand'
+                        }`}
+                      >
+                        <Icon className="mb-2 h-5 w-5" />
+                        <span className="block text-sm font-extrabold">{category.name}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </fieldset>
+
+              <fieldset className="space-y-3">
+                <legend className="text-sm font-extrabold text-white-off">Type de publication</legend>
+                <div className="grid gap-2 sm:grid-cols-2">
                   <button
-                    key={cat}
                     type="button"
-                    onClick={() => setCategorie(cat)}
-                    className={`py-2.5 px-3 rounded-sm text-xs font-bold font-display border transition-all duration-200 ${
-                      categorie === cat
-                        ? 'bg-brand/10 border-brand/40 text-brand'
-                        : 'bg-[#1A1A1A] border-white/5 text-muted hover:border-white/10 hover:text-white-off'
+                    onClick={() => setType('coup_de_gueule')}
+                    className={`rounded-md border p-4 text-left transition ${
+                      type === 'coup_de_gueule'
+                        ? 'border-[color-mix(in_srgb,var(--color-danger)_40%,transparent)] bg-[color-mix(in_srgb,var(--color-danger)_10%,transparent)] text-[var(--color-danger)]'
+                        : 'border-[var(--color-border)] text-muted hover:text-white-off'
                     }`}
                   >
-                    {cat}
+                    <Flame className="mb-2 h-5 w-5" />
+                    <span className="block font-extrabold">Coup de gueule</span>
+                    <span className="mt-1 block text-sm text-muted">Un problème concret à rendre visible.</span>
                   </button>
-                ))}
-              </div>
-            </div>
 
-            {/* Type Choice (suggestion vs coup de gueule) */}
-            <div className="space-y-2">
-              <label className="block text-xs font-bold uppercase tracking-wider text-muted font-display">
-                Format de l'avis
-              </label>
-              <div className="flex space-x-3">
-                <button
-                  type="button"
-                  onClick={() => setType('coup_de_gueule')}
-                  className={`flex-1 py-3 px-4 rounded-sm text-xs font-bold font-display border transition-all duration-200 flex items-center justify-center space-x-2 ${
-                    type === 'coup_de_gueule'
-                      ? 'bg-brand/15 border-brand/40 text-brand'
-                      : 'bg-[#1A1A1A] border-white/5 text-muted hover:border-white/10'
-                  }`}
-                >
-                  <span>😡</span>
-                  <span>Coup de gueule</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setType('suggestion')}
-                  className={`flex-1 py-3 px-4 rounded-sm text-xs font-bold font-display border transition-all duration-200 flex items-center justify-center space-x-2 ${
-                    type === 'suggestion'
-                      ? 'bg-success/15 border-success/40 text-success'
-                      : 'bg-[#1A1A1A] border-white/5 text-muted hover:border-white/10'
-                  }`}
-                >
-                  <span>💡</span>
-                  <span>Suggestion</span>
-                </button>
-              </div>
-            </div>
+                  <button
+                    type="button"
+                    onClick={() => setType('suggestion')}
+                    className={`rounded-md border p-4 text-left transition ${
+                      type === 'suggestion'
+                        ? 'border-[color-mix(in_srgb,var(--color-success)_40%,transparent)] bg-[color-mix(in_srgb,var(--color-success)_10%,transparent)] text-success'
+                        : 'border-[var(--color-border)] text-muted hover:text-white-off'
+                    }`}
+                  >
+                    <Lightbulb className="mb-2 h-5 w-5" />
+                    <span className="block font-extrabold">Suggestion</span>
+                    <span className="mt-1 block text-sm text-muted">Une idée d'amélioration pour le campus.</span>
+                  </button>
+                </div>
+              </fieldset>
 
-            {/* Content Textarea */}
-            <div className="space-y-2">
-              <div className="flex justify-between items-baseline">
-                <label htmlFor="message-body" className="block text-xs font-bold uppercase tracking-wider text-muted font-display">
-                  Votre message
-                </label>
-                <span className="text-[10px] text-muted font-mono">
-                  {contenu.length} caractères (min 10)
-                </span>
+              <div className="space-y-2">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <label htmlFor="message-body" className="text-sm font-extrabold text-white-off">
+                    Message
+                  </label>
+                  <span className="text-xs font-semibold text-muted">
+                    {remaining > 0 ? `${remaining} caractères minimum restants` : `${contenu.length} caractères`}
+                  </span>
+                </div>
+                <textarea
+                  id="message-body"
+                  value={contenu}
+                  onChange={(e) => setContenu(e.target.value)}
+                  placeholder="Décrivez clairement le problème ou la proposition, sans citer de personne identifiable."
+                  rows={8}
+                  required
+                  className="input-custom resize-none"
+                />
               </div>
-              <textarea
-                id="message-body"
-                value={contenu}
-                onChange={(e) => setContenu(e.target.value)}
-                placeholder="Racontez votre expérience ou décrivez votre suggestion..."
-                rows={6}
-                required
-                className="input-custom resize-none"
-              />
-            </div>
 
-            {/* Safety & Anonymity warning banner */}
-            <div className="p-4 rounded-sm bg-[#1A1A1A] border border-white/8 flex items-start space-x-3 text-amber-300">
-              <AlertTriangle className="w-5 h-5 shrink-0 mt-0.5 text-brand" />
-              <div className="space-y-1">
-                <h4 className="text-xs font-bold uppercase tracking-wide font-display text-white-off">Règles d'Anonymat Strictes</h4>
-                <p className="text-[11px] text-muted leading-relaxed font-sans">
-                  Ne mentionnez aucun nom propre (étudiant, professeur, administrateur) ni adresse email ou numéro de téléphone. Tout contenu jugé diffamatoire, insultant ou contenant des données personnelles sera masqué et modéré.
+              <div className="surface-muted flex items-start gap-3 p-4">
+                <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-[var(--color-warning)]" />
+                <p className="text-sm leading-6 text-muted">
+                  Ne publiez pas de nom propre, adresse, email, numéro de téléphone ou accusation personnelle. Le fond du problème suffit au suivi.
                 </p>
               </div>
-            </div>
 
-            {/* Error Message */}
-            {error && (
-              <div className="p-3 rounded-sm border border-brand/20 bg-brand/5 text-brand text-xs font-semibold font-sans">
-                {error}
-              </div>
-            )}
-
-            {/* Submit Button */}
-            <button
-              type="submit"
-              disabled={loading || contenu.trim().length < 10}
-              className="btn-primary w-full py-3"
-            >
-              {loading ? (
-                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-              ) : (
-                <>
-                  <Send className="w-4 h-4" />
-                  <span>Publier l'avis</span>
-                </>
+              {error && (
+                <div className="rounded-md border border-[color-mix(in_srgb,var(--color-danger)_34%,transparent)] bg-[color-mix(in_srgb,var(--color-danger)_8%,transparent)] p-3 text-sm font-bold text-[var(--color-danger)]">
+                  {error}
+                </div>
               )}
-            </button>
 
-          </form>
-        )}
+              <button type="submit" disabled={loading || contenu.trim().length < 10} className="btn-primary w-full">
+                {loading ? (
+                  <span className="h-5 w-5 rounded-full border-2 border-white/40 border-t-white animate-spin" />
+                ) : (
+                  <>
+                    <Send className="h-4 w-4" />
+                    Publier anonymement
+                  </>
+                )}
+              </button>
+            </form>
+          )}
+        </section>
+
+        <aside className="space-y-4">
+          <div className="surface p-5">
+            <div className="mb-3 flex items-center gap-2">
+              <ShieldCheck className="h-5 w-5 text-brand" />
+              <h2 className="font-extrabold text-white-off">Charte avant publication</h2>
+            </div>
+            <ul className="space-y-3 text-sm leading-6 text-muted">
+              <li>Aucun champ nom ou email n'est collecté.</li>
+              <li>Le message doit viser une situation, pas une personne.</li>
+              <li>Les avis inappropriés peuvent être signalés.</li>
+              <li>Les avis très soutenus deviennent des pétitions.</li>
+            </ul>
+          </div>
+
+          <div className="surface p-5">
+            <p className="mb-2 text-sm font-bold text-muted">Votre signature locale</p>
+            <div className="surface-muted p-3 tag-pseudo">{pseudo}</div>
+          </div>
+        </aside>
       </div>
     </div>
   );
