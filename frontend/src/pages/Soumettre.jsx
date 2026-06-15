@@ -4,7 +4,6 @@ import { getOrCreatePseudo } from '../utils/pseudo';
 import { ArrowLeft, AlertTriangle, Send, CheckCircle } from 'lucide-react';
 import { API_BASE } from '../config';
 
-
 const CATEGORIES = ["Pédagogie", "Infrastructure", "Administration", "Équipements"];
 
 export default function Soumettre() {
@@ -53,42 +52,43 @@ export default function Soumettre() {
   };
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-8 space-y-6">
+    <div className="max-w-[760px] mx-auto px-4 py-8 space-y-6">
       
       {/* Back to Feed */}
       <Link 
         to="/" 
-        className="flex items-center space-x-2 text-slate-400 hover:text-white transition-colors duration-200 text-sm w-fit"
+        className="flex items-center space-x-2 text-muted hover:text-white-off transition-colors duration-200 text-sm w-fit font-semibold"
       >
         <ArrowLeft className="w-4 h-4" />
         <span>Retour au fil d'actualité</span>
       </Link>
 
-      <div className="glass p-6 md:p-8 rounded-3xl border border-slate-800 space-y-6 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-purple-500/5 blur-3xl pointer-events-none rounded-full" />
+      <div className="bg-surface p-8 rounded-[20px] border border-white/8 space-y-6 relative overflow-hidden">
+        {/* Decorative subtle brand gradient accent */}
+        <div className="absolute top-0 right-0 w-64 h-64 bg-brand/5 blur-3xl pointer-events-none rounded-full" />
         
         <div className="space-y-2">
-          <h1 className="text-2xl md:text-3xl font-extrabold text-white">
+          <h1 className="text-2xl md:text-3xl font-extrabold text-white-off font-display tracking-wide uppercase">
             Exprimer un avis anonyme
           </h1>
-          <p className="text-xs md:text-sm text-slate-400">
-            Votre publication sera associée au pseudonyme de session <span className="font-mono text-purple-400 font-bold">{pseudo}</span>.
+          <p className="text-xs md:text-sm text-muted font-sans">
+            Votre publication sera associée au pseudonyme de session <span className="tag-pseudo">{pseudo}</span>.
           </p>
         </div>
 
         {/* Success Alert */}
         {success ? (
-          <div className="p-6 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-center space-y-3 flex flex-col items-center">
-            <CheckCircle className="w-12 h-12 text-emerald-400 animate-bounce" />
-            <h3 className="text-lg font-bold text-white">Avis publié avec succès !</h3>
-            <p className="text-sm text-slate-400">Redirection vers le fil d'actualité...</p>
+          <div className="p-6 rounded-sm bg-success/10 border border-success/20 text-center space-y-3 flex flex-col items-center">
+            <CheckCircle className="w-12 h-12 text-success animate-bounce" />
+            <h3 className="text-lg font-bold text-white-off font-display uppercase tracking-wider">Avis publié avec succès !</h3>
+            <p className="text-sm text-muted">Redirection vers le fil d'actualité...</p>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-6">
             
             {/* Category Select */}
             <div className="space-y-2">
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-400">
+              <label className="block text-xs font-bold uppercase tracking-wider text-muted font-display">
                 Catégorie
               </label>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
@@ -97,10 +97,10 @@ export default function Soumettre() {
                     key={cat}
                     type="button"
                     onClick={() => setCategorie(cat)}
-                    className={`py-2 px-3 rounded-xl text-xs font-semibold border transition-all duration-200 ${
+                    className={`py-2.5 px-3 rounded-sm text-xs font-bold font-display border transition-all duration-200 ${
                       categorie === cat
-                        ? 'bg-purple-600/20 border-purple-500 text-purple-300'
-                        : 'bg-slate-900 border-slate-800 text-slate-400 hover:border-slate-700 hover:text-slate-200'
+                        ? 'bg-brand/10 border-brand/40 text-brand'
+                        : 'bg-[#1A1A1A] border-white/5 text-muted hover:border-white/10 hover:text-white-off'
                     }`}
                   >
                     {cat}
@@ -111,17 +111,17 @@ export default function Soumettre() {
 
             {/* Type Choice (suggestion vs coup de gueule) */}
             <div className="space-y-2">
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-400">
+              <label className="block text-xs font-bold uppercase tracking-wider text-muted font-display">
                 Format de l'avis
               </label>
               <div className="flex space-x-3">
                 <button
                   type="button"
                   onClick={() => setType('coup_de_gueule')}
-                  className={`flex-1 py-3 px-4 rounded-xl text-xs font-bold border transition-all duration-200 flex items-center justify-center space-x-2 ${
+                  className={`flex-1 py-3 px-4 rounded-sm text-xs font-bold font-display border transition-all duration-200 flex items-center justify-center space-x-2 ${
                     type === 'coup_de_gueule'
-                      ? 'bg-rose-500/15 border-rose-500/50 text-rose-400'
-                      : 'bg-slate-900 border-slate-800 text-slate-400 hover:border-slate-700'
+                      ? 'bg-brand/15 border-brand/40 text-brand'
+                      : 'bg-[#1A1A1A] border-white/5 text-muted hover:border-white/10'
                   }`}
                 >
                   <span>😡</span>
@@ -130,10 +130,10 @@ export default function Soumettre() {
                 <button
                   type="button"
                   onClick={() => setType('suggestion')}
-                  className={`flex-1 py-3 px-4 rounded-xl text-xs font-bold border transition-all duration-200 flex items-center justify-center space-x-2 ${
+                  className={`flex-1 py-3 px-4 rounded-sm text-xs font-bold font-display border transition-all duration-200 flex items-center justify-center space-x-2 ${
                     type === 'suggestion'
-                      ? 'bg-emerald-500/15 border-emerald-500/50 text-emerald-400'
-                      : 'bg-slate-900 border-slate-800 text-slate-400 hover:border-slate-700'
+                      ? 'bg-success/15 border-success/40 text-success'
+                      : 'bg-[#1A1A1A] border-white/5 text-muted hover:border-white/10'
                   }`}
                 >
                   <span>💡</span>
@@ -145,10 +145,10 @@ export default function Soumettre() {
             {/* Content Textarea */}
             <div className="space-y-2">
               <div className="flex justify-between items-baseline">
-                <label htmlFor="message-body" className="block text-xs font-bold uppercase tracking-wider text-slate-400">
+                <label htmlFor="message-body" className="block text-xs font-bold uppercase tracking-wider text-muted font-display">
                   Votre message
                 </label>
-                <span className="text-[10px] text-slate-500 font-mono">
+                <span className="text-[10px] text-muted font-mono">
                   {contenu.length} caractères (min 10)
                 </span>
               </div>
@@ -159,16 +159,16 @@ export default function Soumettre() {
                 placeholder="Racontez votre expérience ou décrivez votre suggestion..."
                 rows={6}
                 required
-                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all duration-200 resize-none"
+                className="input-custom resize-none"
               />
             </div>
 
             {/* Safety & Anonymity warning banner */}
-            <div className="p-4 rounded-xl bg-amber-500/5 border border-amber-500/20 flex items-start space-x-3 text-amber-300">
-              <AlertTriangle className="w-5 h-5 shrink-0 mt-0.5" />
+            <div className="p-4 rounded-sm bg-[#1A1A1A] border border-white/8 flex items-start space-x-3 text-amber-300">
+              <AlertTriangle className="w-5 h-5 shrink-0 mt-0.5 text-brand" />
               <div className="space-y-1">
-                <h4 className="text-xs font-bold uppercase tracking-wide">Règles d'Anonymat Strictes</h4>
-                <p className="text-[11px] text-amber-200/80 leading-relaxed">
+                <h4 className="text-xs font-bold uppercase tracking-wide font-display text-white-off">Règles d'Anonymat Strictes</h4>
+                <p className="text-[11px] text-muted leading-relaxed font-sans">
                   Ne mentionnez aucun nom propre (étudiant, professeur, administrateur) ni adresse email ou numéro de téléphone. Tout contenu jugé diffamatoire, insultant ou contenant des données personnelles sera masqué et modéré.
                 </p>
               </div>
@@ -176,7 +176,7 @@ export default function Soumettre() {
 
             {/* Error Message */}
             {error && (
-              <div className="p-3 rounded-lg border border-rose-500/20 bg-rose-500/5 text-rose-400 text-xs font-medium">
+              <div className="p-3 rounded-sm border border-brand/20 bg-brand/5 text-brand text-xs font-semibold font-sans">
                 {error}
               </div>
             )}
@@ -184,12 +184,8 @@ export default function Soumettre() {
             {/* Submit Button */}
             <button
               type="submit"
-              disabled={loading || contenido.trim().length < 10}
-              className={`w-full py-3 rounded-xl font-semibold text-white flex items-center justify-center space-x-2 transition-all duration-300 ${
-                loading || contenido.trim().length < 10
-                  ? 'bg-slate-850 text-slate-500 border border-slate-800 cursor-not-allowed'
-                  : 'bg-purple-600 hover:bg-purple-500 hover:shadow-lg hover:shadow-purple-600/20 active:scale-[0.98]'
-              }`}
+              disabled={loading || contenu.trim().length < 10}
+              className="btn-primary w-full py-3"
             >
               {loading ? (
                 <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />

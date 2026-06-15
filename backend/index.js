@@ -12,25 +12,30 @@ const app = express();
 const server = http.createServer(app);
 
 // Configurer Socket.io avec CORS
+const FRONTEND_URL = process.env.FRONTEND_URL || "https://campusverite.vercel.app";
 const io = socketIo(server, {
   cors: {
-    origin: "*", // Autoriser toutes les origines en dev
+    origin: [FRONTEND_URL, "http://localhost:5173", "http://localhost:3000"],
     methods: ["GET", "POST"]
   }
 });
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: [FRONTEND_URL, "http://localhost:5173", "http://localhost:3000"]
+}));
 app.use(express.json());
 
 // Routes
 const avisRouter = require('./routes/avis');
 const votesRouter = require('./routes/votes');
 const chatRouter = require('./routes/chat');
+const adminRouter = require('./routes/admin');
 
 app.use('/api/avis', avisRouter);
 app.use('/api/votes', votesRouter);
 app.use('/api', chatRouter); // Ainsi, /rooms et /rooms/:id/messages sont sous /api/rooms et /api/rooms/:id/messages
+app.use('/api/admin', adminRouter);
 
 // Route de base de l'API
 app.get('/', (req, res) => {

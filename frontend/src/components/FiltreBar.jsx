@@ -2,15 +2,15 @@ import React from 'react';
 import { Flame, Lightbulb, GraduationCap, Building, Wrench, FileText, Activity } from 'lucide-react';
 
 const CATEGORIES = [
-  { name: 'Pédagogie', icon: GraduationCap, color: 'text-amber-400 bg-amber-500/10' },
-  { name: 'Infrastructure', icon: Building, color: 'text-sky-400 bg-sky-500/10' },
-  { name: 'Administration', icon: FileText, color: 'text-teal-400 bg-teal-500/10' },
-  { name: 'Équipements', icon: Wrench, color: 'text-indigo-400 bg-indigo-500/10' },
+  { name: 'Pédagogie', icon: GraduationCap, color: 'text-amber-400 bg-amber-500/10 border-amber-500/20' },
+  { name: 'Infrastructure', icon: Building, color: 'text-sky-400 bg-sky-500/10 border-sky-500/20' },
+  { name: 'Administration', icon: FileText, color: 'text-teal-400 bg-teal-500/10 border-teal-500/20' },
+  { name: 'Équipements', icon: Wrench, color: 'text-indigo-400 bg-indigo-500/10 border-indigo-500/20' },
 ];
 
 const TYPES = [
-  { value: 'coup_de_gueule', label: 'Coup de gueule', icon: Flame, color: 'text-rose-500 bg-rose-500/10' },
-  { value: 'suggestion', label: 'Suggestion', icon: Lightbulb, color: 'text-emerald-500 bg-emerald-500/10' }
+  { value: 'coup_de_gueule', label: 'Coup de gueule', icon: Flame, color: 'text-brand' },
+  { value: 'suggestion', label: 'Suggestion', icon: Lightbulb, color: 'text-success' }
 ];
 
 export default function FiltreBar({ 
@@ -41,14 +41,15 @@ export default function FiltreBar({
   return (
     <div className="space-y-6">
       {/* Tableau de Chaleur (Heatmap panel) */}
-      <div className="glass p-5 rounded-2xl border border-slate-800">
+      <div className="bg-surface p-6 rounded-[20px] border border-white/8">
         <div className="flex items-center space-x-2 mb-4">
-          <Activity className="w-5 h-5 text-purple-400 animate-pulse" />
-          <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-400">
+          <Activity className="w-5 h-5 text-brand animate-pulse" />
+          <h2 className="text-xs font-bold uppercase tracking-wider text-muted font-display">
             Tableau de Chaleur Campus
           </h2>
         </div>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {CATEGORIES.map(cat => {
             const count = categoryStats[cat.name] || 0;
             const percentage = totalAvis > 0 ? Math.round((count / totalAvis) * 100) : 0;
@@ -57,27 +58,28 @@ export default function FiltreBar({
             return (
               <div 
                 key={cat.name} 
-                className={`p-3 rounded-xl border transition-all duration-300 ${
+                onClick={() => setSelectedCategory(selectedCategory === cat.name ? null : cat.name)}
+                className={`p-4 rounded-[12px] border cursor-pointer transition-all duration-300 ${
                   selectedCategory === cat.name 
-                    ? 'bg-purple-950/20 border-purple-500/50 shadow-[0_0_15px_rgba(168,85,247,0.15)]' 
-                    : 'bg-slate-900/50 border-slate-800 hover:border-slate-700'
+                    ? 'bg-brand/10 border-brand/40 shadow-[0_0_15px_rgba(var(--color-brand-rgb),0.1)]' 
+                    : 'bg-abyssal/40 border-white/5 hover:border-white/12'
                 }`}
               >
                 <div className="flex items-center justify-between mb-2">
-                  <div className={`p-1.5 rounded-lg ${cat.color}`}>
+                  <div className={`p-1.5 rounded-sm border ${cat.color}`}>
                     <Icon className="w-4 h-4" />
                   </div>
-                  <span className="text-xs text-slate-500 font-mono">{percentage}%</span>
+                  <span className="text-xs text-muted font-mono">{percentage}%</span>
                 </div>
-                <div className="text-xs font-medium text-slate-300 truncate">{cat.name}</div>
-                <div className="text-lg font-bold text-white mt-1 flex items-baseline">
+                <div className="text-xs font-semibold text-white-off truncate">{cat.name}</div>
+                <div className="text-lg font-bold text-white mt-1 flex items-baseline font-display">
                   {count}
-                  <span className="text-[10px] text-slate-500 font-normal ml-1">avis</span>
+                  <span className="text-[10px] text-muted font-normal ml-1 font-sans">avis</span>
                 </div>
                 {/* Visual heat indicator bar */}
-                <div className="w-full bg-slate-950 rounded-full h-1 mt-2 overflow-hidden">
+                <div className="w-full bg-abyssal rounded-full h-1 mt-2 overflow-hidden">
                   <div 
-                    className="bg-purple-500 h-full rounded-full transition-all duration-500" 
+                    className="bg-brand h-full rounded-full transition-all duration-500" 
                     style={{ width: `${percentage}%` }}
                   />
                 </div>
@@ -88,15 +90,15 @@ export default function FiltreBar({
       </div>
 
       {/* Main filters selection */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 glass rounded-2xl border border-slate-800">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 bg-surface rounded-[12px] border border-white/8">
         {/* Category filters */}
         <div className="flex flex-wrap items-center gap-2">
           <button
             onClick={() => setSelectedCategory(null)}
-            className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all duration-200 ${
+            className={`px-3 py-1.5 rounded-sm text-xs font-bold font-display transition-all duration-200 border cursor-pointer ${
               selectedCategory === null
-                ? 'bg-purple-600 text-white shadow-lg shadow-purple-600/30'
-                : 'bg-slate-900 text-slate-400 hover:bg-slate-800 hover:text-slate-200'
+                ? 'bg-brand text-white border-brand shadow-lg shadow-brand/10'
+                : 'bg-abyssal/40 border-white/5 text-muted hover:border-white/10 hover:text-white-off'
             }`}
           >
             Toutes Catégories
@@ -108,10 +110,10 @@ export default function FiltreBar({
               <button
                 key={cat.name}
                 onClick={() => setSelectedCategory(cat.name)}
-                className={`flex items-center space-x-1 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all duration-200 ${
+                className={`flex items-center space-x-1 px-3 py-1.5 rounded-sm text-xs font-bold font-display transition-all duration-200 border cursor-pointer ${
                   isSelected
-                    ? 'bg-purple-600 text-white shadow-lg shadow-purple-600/30'
-                    : 'bg-slate-900 text-slate-400 hover:bg-slate-800 hover:text-slate-200'
+                    ? 'bg-brand text-white border-brand shadow-lg shadow-brand/10'
+                    : 'bg-abyssal/40 border-white/5 text-muted hover:border-white/10 hover:text-white-off'
                 }`}
               >
                 <Icon className="w-3.5 h-3.5" />
@@ -122,13 +124,13 @@ export default function FiltreBar({
         </div>
 
         {/* Type filters (Coup de gueule vs Suggestion) */}
-        <div className="flex items-center gap-2 bg-slate-950 p-1 rounded-xl border border-slate-800">
+        <div className="flex items-center gap-2 bg-abyssal p-1 rounded-sm border border-white/8">
           <button
             onClick={() => setSelectedType(null)}
-            className={`px-3 py-1 rounded-lg text-xs font-medium transition-all duration-200 ${
+            className={`px-3 py-1 rounded-sm text-xs font-bold font-display transition-all duration-200 cursor-pointer ${
               selectedType === null
-                ? 'bg-slate-800 text-white font-semibold'
-                : 'text-slate-400 hover:text-slate-200'
+                ? 'bg-surface text-white-off border border-white/10'
+                : 'text-muted hover:text-white-off'
             }`}
           >
             Tous les types
@@ -140,13 +142,13 @@ export default function FiltreBar({
               <button
                 key={t.value}
                 onClick={() => setSelectedType(t.value)}
-                className={`flex items-center space-x-1 px-3 py-1 rounded-lg text-xs font-medium transition-all duration-200 ${
+                className={`flex items-center space-x-1 px-3 py-1 rounded-sm text-xs font-bold font-display transition-all duration-200 border cursor-pointer ${
                   isSelected
-                    ? 'bg-slate-800 text-white font-semibold'
-                    : 'text-slate-400 hover:text-slate-200'
+                    ? 'bg-surface text-white-off border-white/10'
+                    : 'bg-transparent border-transparent text-muted hover:text-white-off'
                 }`}
               >
-                <Icon className={`w-3.5 h-3.5 ${t.value === 'coup_de_gueule' ? 'text-rose-500' : 'text-emerald-500'}`} />
+                <Icon className={`w-3.5 h-3.5 ${t.color}`} />
                 <span>{t.label}</span>
               </button>
             );

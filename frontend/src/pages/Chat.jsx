@@ -4,11 +4,10 @@ import { getOrCreatePseudo } from '../utils/pseudo';
 import MessageBubble from '../components/MessageBubble';
 import { 
   Send, Plus, MessageSquare, Users, User, Hash, 
-  ArrowLeft, RefreshCw, Volume2, ShieldAlert 
+  ArrowLeft, RefreshCw, Volume2, ShieldAlert, Sparkles, Activity
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { API_BASE } from '../config';
-
 
 export default function Chat() {
   const [rooms, setRooms] = useState([]);
@@ -16,12 +15,13 @@ export default function Chat() {
   const [messages, setMessages] = useState([]);
   const [newMsgContent, setNewMsgContent] = useState('');
   
-  // Modals / forms
+  // Modals / forms / list
   const [newRoomType, setNewRoomType] = useState('dm');
   const [newRoomMembres, setNewRoomMembres] = useState('');
   const [createError, setCreateError] = useState('');
   const [loadingRooms, setLoadingRooms] = useState(false);
   const [loadingMessages, setLoadingMessages] = useState(false);
+  const [onlinePseudos, setOnlinePseudos] = useState([]);
 
   const socketRef = useRef(null);
   const messagesEndRef = useRef(null);
@@ -51,30 +51,44 @@ export default function Chat() {
     fetchRooms();
   }, [pseudo]);
 
-  // 2. Setup Socket.io connection
+  // 2. Setup Socket.io connection (once on mount)
   useEffect(() => {
     socketRef.current = io(API_BASE);
 
     socketRef.current.on('connect', () => {
       console.log('🔌 Connecté au serveur WebSocket.');
+      // Register current user pseudonym on the backend socket
+      socketRef.current.emit('register_user', pseudo);
     });
 
-    // Listen for incoming messages
-    socketRef.current.on('receive_message', (msg) => {
-      // Append if the message belongs to the current room
-      if (currentRoom && msg.room_id.toString() === currentRoom._id.toString()) {
-        setMessages((prev) => {
-          // Prevent duplicates
-          if (prev.some(m => m._id === msg._id)) return prev;
-          return [...prev, msg];
-        });
-      }
+    socketRef.current.on('online_users', (pseudos) => {
+      setOnlinePseudos(pseudos);
     });
 
     return () => {
       if (socketRef.current) {
         socketRef.current.disconnect();
       }
+    };
+  }, [pseudo]);
+
+  // 2b. Listen for incoming messages
+  useEffect(() => {
+    if (!socketRef.current) return;
+
+    const handler = (msg) => {
+      if (currentRoom && msg.room_id.toString() === currentRoom._id.toString()) {
+        setMessages((prev) => {
+          if (prev.some(m => m._id === msg._id)) return prev;
+          return [...prev, msg];
+        });
+      }
+    };
+
+    socketRef.current.on('receive_message', handler);
+
+    return () => {
+      socketRef.current.off('receive_message', handler);
     };
   }, [currentRoom]);
 
@@ -129,9 +143,9 @@ export default function Chat() {
     setNewMsgContent('');
   };
 
-  // 5. Create new room
+  // 5. Create room via manual inputs
   const handleCreateRoom = async (e) => {
-    e.preventDefault();
+    if (e) e.preventDefault();
     setCreateError('');
     
     if (!newRoomMembres.trim()) {
@@ -139,12 +153,10 @@ export default function Chat() {
       return;
     }
 
-    // Parse members (comma separated)
     const membersList = newRoomMembres.split(',')
       .map(m => m.trim())
       .filter(m => m.length > 0);
 
-    // Include oneself in members
     if (!membersList.includes(pseudo)) {
       membersList.push(pseudo);
     }
@@ -165,7 +177,10 @@ export default function Chat() {
       }
 
       const createdRoom = await res.json();
-      setRooms(prev => [createdRoom, ...prev]);
+      setRooms(prev => {
+        if (prev.some(r => r._id === createdRoom._id)) return prev;
+        return [createdRoom, ...prev];
+      });
       setCurrentRoom(createdRoom);
       setNewRoomMembres('');
       setCreateError('');
@@ -174,35 +189,69 @@ export default function Chat() {
     }
   };
 
+  // 6. Direct click to start DM with an online user
+  const handleStartDM = async (targetPseudo) => {
+    if (targetPseudo === pseudo) return;
+    try {
+      const res = await fetch(`${API_BASE}/api/rooms`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'dm',
+          membres: [pseudo, targetPseudo]
+        })
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Erreur lors du ciblage du salon.");
+      }
+
+      const room = await res.json();
+      setRooms(prev => {
+        if (prev.some(r => r._id === room._id)) return prev;
+        return [room, ...prev];
+      });
+      setCurrentRoom(room);
+    } catch (err) {
+      console.error(err);
+      alert(err.message);
+    }
+  };
+
+  // Exclude current user from online users list
+  const activeOnlineUsers = onlinePseudos.filter(p => p !== pseudo);
+
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8 h-[calc(100vh-120px)] min-h-[500px] flex flex-col">
+    <div className="max-w-7xl mx-auto px-4 py-8 h-[calc(100vh-140px)] min-h-[550px] flex flex-col">
       
       {/* Header Bar */}
       <div className="flex items-center justify-between mb-4 shrink-0">
-        <Link to="/" className="flex items-center space-x-2 text-slate-400 hover:text-white transition-colors duration-200 text-sm">
+        <Link to="/" className="flex items-center space-x-2 text-muted hover:text-white-off transition-colors duration-200 text-sm font-semibold">
           <ArrowLeft className="w-4 h-4" />
           <span>Fil d'actualité</span>
         </Link>
         <div className="text-right">
-          <span className="text-xs text-slate-400">Pseudo de session : </span>
-          <span className="text-xs font-mono font-bold text-purple-400">{pseudo}</span>
+          <span className="text-xs text-muted">Pseudo de session : </span>
+          <span className="text-xs tag-pseudo font-bold">{pseudo}</span>
         </div>
       </div>
 
       {/* Main Chat Layout Container */}
-      <div className="flex-1 flex flex-col md:flex-row glass rounded-3xl border border-slate-800 overflow-hidden min-h-0">
+      <div className="flex-1 flex flex-col md:flex-row bg-surface rounded-[20px] border border-white/8 overflow-hidden min-h-0">
         
-        {/* LEFT COLUMN: Rooms List & Creation */}
-        <div className="w-full md:w-80 border-b md:border-b-0 md:border-r border-slate-800 flex flex-col h-1/3 md:h-full min-h-0 bg-slate-950/45">
+        {/* LEFT COLUMN: Rooms List, Active Users & Creation */}
+        <div className="w-full md:w-80 border-b md:border-b-0 md:border-r border-white/8 flex flex-col h-1/2 md:h-full min-h-0 bg-abyssal/20">
+          
           {/* Header */}
-          <div className="p-4 border-b border-slate-800 flex items-center justify-between bg-slate-900/20">
-            <h2 className="text-sm font-bold text-slate-200 flex items-center space-x-2">
-              <MessageSquare className="w-4 h-4 text-purple-400" />
+          <div className="p-4 border-b border-white/8 flex items-center justify-between bg-surface">
+            <h2 className="text-sm font-bold text-white-off flex items-center space-x-2 font-display uppercase tracking-wider">
+              <MessageSquare className="w-4 h-4 text-brand" />
               <span>Salons de chat</span>
             </h2>
             <button 
               onClick={fetchRooms}
-              className="p-1 text-slate-500 hover:text-white transition-colors"
+              className="p-1 text-muted hover:text-white-off transition-colors cursor-pointer"
               title="Rafraîchir"
             >
               <RefreshCw className="w-3.5 h-3.5" />
@@ -210,15 +259,14 @@ export default function Chat() {
           </div>
 
           {/* Rooms Navigation List */}
-          <div className="flex-1 overflow-y-auto p-2 space-y-1">
+          <div className="flex-1 overflow-y-auto p-2 space-y-1 min-h-0">
             {loadingRooms && rooms.length === 0 ? (
-              <p className="text-xs text-slate-600 p-4 text-center">Chargement...</p>
+              <p className="text-xs text-muted p-4 text-center">Chargement...</p>
             ) : rooms.length === 0 ? (
-              <p className="text-xs text-slate-600 p-4 text-center">Aucun salon. Créez-en un ci-dessous.</p>
+              <p className="text-xs text-muted p-4 text-center">Aucun salon de chat actif.</p>
             ) : (
               rooms.map((room) => {
                 const isSelected = currentRoom?._id === room._id;
-                // Exclude current user from members text for DMs
                 const displayMembres = room.membres
                   .filter(m => m !== pseudo)
                   .join(', ') || 'Général';
@@ -227,23 +275,23 @@ export default function Chat() {
                   <button
                     key={room._id}
                     onClick={() => setCurrentRoom(room)}
-                    className={`w-full text-left p-3 rounded-xl transition-all duration-200 flex items-center space-x-3 border ${
+                    className={`w-full text-left p-3 rounded-sm transition-all duration-200 flex items-center space-x-3 border cursor-pointer ${
                       isSelected
-                        ? 'bg-purple-600/10 border-purple-500/30 text-purple-300 shadow-[0_0_10px_rgba(168,85,247,0.05)]'
-                        : 'bg-transparent border-transparent text-slate-400 hover:bg-slate-900/60 hover:text-slate-200'
+                        ? 'bg-brand/10 border-brand/20 text-brand'
+                        : 'bg-transparent border-transparent text-muted hover:bg-surface hover:text-white-off'
                     }`}
                   >
                     {room.type === 'dm' ? (
-                      <User className={`w-4 h-4 ${isSelected ? 'text-purple-400' : 'text-slate-500'}`} />
+                      <User className={`w-4 h-4 ${isSelected ? 'text-brand' : 'text-muted'}`} />
                     ) : (
-                      <Users className={`w-4 h-4 ${isSelected ? 'text-purple-400' : 'text-slate-500'}`} />
+                      <Users className={`w-4 h-4 ${isSelected ? 'text-brand' : 'text-muted'}`} />
                     )}
                     <div className="min-w-0 flex-1">
                       <div className="text-xs font-bold truncate">
-                        {room.type === 'group' ? `Salon Groupe (${room.membres.length})` : displayMembres}
+                        {room.type === 'group' ? `Groupe (${room.membres.length})` : displayMembres}
                       </div>
-                      <div className="text-[10px] text-slate-500 truncate">
-                        {room.type === 'group' ? room.membres.join(', ') : 'Messagerie directe'}
+                      <div className="text-[10px] text-muted font-mono truncate">
+                        {room.type === 'group' ? room.membres.join(', ') : 'Messagerie privée'}
                       </div>
                     </div>
                   </button>
@@ -252,19 +300,53 @@ export default function Chat() {
             )}
           </div>
 
+          {/* ONLINE ACTIVE USERS WIDGET (Preserves Anonymity, enables direct selection) */}
+          <div className="border-t border-white/8 p-4 bg-abyssal/30 min-h-[120px] max-h-[160px] overflow-y-auto flex flex-col">
+            <div className="text-[10px] font-bold text-muted uppercase tracking-wider font-display mb-2 flex items-center justify-between">
+              <span>Utilisateurs Connectés</span>
+              <span className="flex items-center space-x-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+                <span className="font-mono text-[9px] lowercase text-green-500">{onlinePseudos.length} en ligne</span>
+              </span>
+            </div>
+
+            {activeOnlineUsers.length === 0 ? (
+              <p className="text-[10px] text-muted italic my-auto text-center">
+                Aucun autre utilisateur en ligne.
+              </p>
+            ) : (
+              <div className="flex flex-col gap-1.5">
+                {activeOnlineUsers.map((p) => (
+                  <button
+                    key={p}
+                    onClick={() => handleStartDM(p)}
+                    className="w-full text-left flex items-center justify-between py-1 px-2 rounded-sm bg-surface/50 border border-white/5 hover:border-brand/40 text-[11px] transition-colors cursor-pointer group"
+                    title={`Lancer un chat privé anonyme avec ${p}`}
+                  >
+                    <span className="tag-pseudo text-[11px] group-hover:underline">{p}</span>
+                    <span className="text-[9px] text-muted font-sans group-hover:text-brand flex items-center space-x-1">
+                      <span>Discuter</span>
+                      <Plus className="w-3 h-3" />
+                    </span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
           {/* Create Room Form (Bottom of Left Pane) */}
-          <div className="p-4 border-t border-slate-800 bg-slate-900/10">
+          <div className="p-4 border-t border-white/8 bg-surface">
             <form onSubmit={handleCreateRoom} className="space-y-3">
-              <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wide">
-                Nouveau salon
+              <div className="text-[11px] font-bold text-muted uppercase tracking-wider font-display">
+                Nouveau salon manuel
               </div>
               
-              <div className="flex bg-slate-950 p-0.5 rounded-lg border border-slate-850">
+              <div className="flex bg-abyssal p-0.5 rounded-sm border border-white/8">
                 <button
                   type="button"
                   onClick={() => setNewRoomType('dm')}
-                  className={`flex-1 py-1 rounded text-[10px] font-bold transition-all ${
-                    newRoomType === 'dm' ? 'bg-slate-800 text-white' : 'text-slate-500'
+                  className={`flex-1 py-1 rounded-sm text-[10px] font-bold font-display transition-all cursor-pointer ${
+                    newRoomType === 'dm' ? 'bg-surface text-white-off border border-white/5' : 'text-muted'
                   }`}
                 >
                   Direct Msg
@@ -272,8 +354,8 @@ export default function Chat() {
                 <button
                   type="button"
                   onClick={() => setNewRoomType('group')}
-                  className={`flex-1 py-1 rounded text-[10px] font-bold transition-all ${
-                    newRoomType === 'group' ? 'bg-slate-800 text-white' : 'text-slate-500'
+                  className={`flex-1 py-1 rounded-sm text-[10px] font-bold font-display transition-all cursor-pointer ${
+                    newRoomType === 'group' ? 'bg-surface text-white-off border border-white/5' : 'text-muted'
                   }`}
                 >
                   Groupe
@@ -286,17 +368,17 @@ export default function Chat() {
                   placeholder={newRoomType === 'dm' ? "Ex: Loup#8214" : "Ex: Renard#12, Tigre#44"}
                   value={newRoomMembres}
                   onChange={(e) => setNewRoomMembres(e.target.value)}
-                  className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 placeholder-slate-650 focus:outline-none focus:border-purple-500"
+                  className="input-custom py-1.5 text-xs"
                 />
               </div>
 
               {createError && (
-                <div className="text-[10px] text-rose-400 font-medium">{createError}</div>
+                <div className="text-[10px] text-brand font-bold">{createError}</div>
               )}
 
               <button
                 type="submit"
-                className="w-full py-1.5 rounded-lg bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold transition-all flex items-center justify-center space-x-1.5"
+                className="w-full py-1.5 rounded-sm bg-brand hover:opacity-90 text-white text-xs font-bold font-display transition-all flex items-center justify-center space-x-1.5 cursor-pointer"
               >
                 <Plus className="w-3.5 h-3.5" />
                 <span>Créer le salon</span>
@@ -306,13 +388,13 @@ export default function Chat() {
         </div>
 
         {/* RIGHT COLUMN: Active Chat Messages & Message Input */}
-        <div className="flex-1 flex flex-col h-2/3 md:h-full min-h-0 bg-slate-900/10">
+        <div className="flex-1 flex flex-col h-1/2 md:h-full min-h-0 bg-transparent">
           {currentRoom ? (
             <>
               {/* Active Room Title Header */}
-              <div className="p-4 border-b border-slate-800 flex items-center justify-between bg-slate-900/20">
+              <div className="p-4 border-b border-white/8 flex items-center justify-between bg-surface">
                 <div>
-                  <div className="text-xs font-bold text-white flex items-center space-x-1.5">
+                  <div className="text-xs font-bold text-white-off flex items-center space-x-1.5 font-display uppercase tracking-wide">
                     <span>💬</span>
                     <span>
                       {currentRoom.type === 'group' 
@@ -320,30 +402,30 @@ export default function Chat() {
                         : `Discussion avec ${currentRoom.membres.filter(m => m !== pseudo).join(', ') || 'moi-même'}`}
                     </span>
                   </div>
-                  <div className="text-[10px] text-slate-500">
+                  <div className="text-[10px] text-muted font-mono">
                     ID Salon : {currentRoom._id}
                   </div>
                 </div>
               </div>
 
-              {/* Message History list */}
-              <div className="flex-1 overflow-y-auto p-4 space-y-2">
-                {loadingMessages && messages.length === 0 ? (
-                  <div className="flex items-center justify-center h-full">
-                    <p className="text-xs text-slate-500">Chargement de l'historique...</p>
+              {/* Chat Messages Log */}
+              <div className="flex-1 overflow-y-auto p-4 space-y-3 min-h-0 bg-abyssal/10">
+                {loadingMessages ? (
+                  <div className="text-center text-xs text-muted py-8 font-mono animate-pulse">
+                    Chargement des messages chiffrés...
                   </div>
                 ) : messages.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center h-full opacity-60 space-y-2 p-6">
-                    <MessageSquare className="w-8 h-8 text-purple-400/80" />
-                    <p className="text-xs text-slate-400">Aucun message ici. Lancez la discussion !</p>
+                  <div className="text-center py-12">
+                    <p className="text-xs text-muted font-semibold">Aucun message ici. Lancez la discussion !</p>
                   </div>
                 ) : (
                   messages.map((msg) => (
-                    <MessageBubble 
-                      key={msg._id} 
-                      message={msg} 
-                      currentPseudo={pseudo} 
-                    />
+                    <div key={msg._id} className="chat-message-anim">
+                      <MessageBubble 
+                        message={msg} 
+                        currentPseudo={pseudo} 
+                      />
+                    </div>
                   ))
                 )}
                 {/* Scroll Anchor */}
@@ -351,23 +433,19 @@ export default function Chat() {
               </div>
 
               {/* Message Input form (Bottom of Right Pane) */}
-              <div className="p-4 border-t border-slate-800 bg-slate-950/35">
+              <div className="p-4 border-t border-white/8 bg-surface">
                 <form onSubmit={handleSendMessage} className="flex space-x-2">
                   <input
                     type="text"
                     placeholder="Écrire un message anonyme..."
                     value={newMsgContent}
                     onChange={(e) => setNewMsgContent(e.target.value)}
-                    className="flex-1 bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-purple-500 transition-all duration-200"
+                    className="flex-1 input-custom"
                   />
                   <button
                     type="submit"
                     disabled={!newMsgContent.trim()}
-                    className={`p-2.5 rounded-xl text-white transition-all duration-200 ${
-                      newMsgContent.trim()
-                        ? 'bg-purple-600 hover:bg-purple-500 active:scale-95 shadow-md shadow-purple-600/10'
-                        : 'bg-slate-850 text-slate-600 border border-slate-800 cursor-not-allowed'
-                    }`}
+                    className="btn-primary py-2.5 px-4 cursor-pointer"
                   >
                     <Send className="w-4 h-4" />
                   </button>
@@ -375,12 +453,11 @@ export default function Chat() {
               </div>
             </>
           ) : (
-            // No Room Selected State
-            <div className="flex-1 flex flex-col items-center justify-center p-8 text-center space-y-3">
-              <MessageSquare className="w-12 h-12 text-slate-700 animate-bounce" />
-              <h3 className="text-base font-bold text-slate-300">Aucun salon actif</h3>
-              <p className="text-xs text-slate-500 max-w-xs">
-                Sélectionnez un salon à gauche ou créez un nouveau salon avec le pseudonyme d'un camarade.
+            <div className="flex-1 flex flex-col items-center justify-center text-center p-8 bg-abyssal/5">
+              <MessageSquare className="w-12 h-12 text-muted mb-4 animate-bounce" />
+              <h3 className="text-sm font-bold text-white-off font-display uppercase tracking-wider">Sélectionnez un salon</h3>
+              <p className="text-xs text-muted font-sans mt-2 max-w-xs">
+                Sélectionnez un salon à gauche ou cliquez sur un membre connecté pour démarrer une messagerie privée anonyme.
               </p>
             </div>
           )}
