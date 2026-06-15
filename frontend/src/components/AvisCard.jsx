@@ -46,10 +46,10 @@ export default function AvisCard({ avis, onVote, onSignale, hasVoted, isVoting }
   return (
     <motion.article
       layout
-      variants={{
-        hidden: { opacity: 0, y: 16 },
-        visible: { opacity: 1, y: 0, transition: { duration: 0.26, ease: 'easeOut' } },
-      }}
+      initial={{ opacity: 0, y: 12 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-40px" }}
+      transition={{ duration: 0.16, ease: [0.16, 1, 0.3, 1] }}
       whileHover={{ y: -3 }}
       className={`avis-card-custom flex min-h-[230px] flex-col p-5 ${isPetition ? 'animate-petition-border' : ''}`}
     >
