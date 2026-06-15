@@ -4,8 +4,7 @@ import FiltreBar from '../components/FiltreBar';
 import AvisCard from '../components/AvisCard';
 import { RefreshCw, MessageSquare, AlertCircle, ArrowUpRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
-
-const API_BASE = 'http://localhost:5000';
+import { API_BASE } from '../config';
 
 export default function Feed() {
   const [avisList, setAvisList] = useState([]);

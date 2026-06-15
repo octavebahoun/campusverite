@@ -7,8 +7,8 @@ import {
   ArrowLeft, RefreshCw, Volume2, ShieldAlert 
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { API_BASE } from '../config';
 
-const API_BASE = 'http://localhost:5000';
 
 export default function Chat() {
   const [rooms, setRooms] = useState([]);

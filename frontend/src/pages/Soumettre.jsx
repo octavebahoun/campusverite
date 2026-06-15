@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { getOrCreatePseudo } from '../utils/pseudo';
 import { ArrowLeft, AlertTriangle, Send, CheckCircle } from 'lucide-react';
+import { API_BASE } from '../config';
 
-const API_BASE = 'http://localhost:5000';
 
 const CATEGORIES = ["Pédagogie", "Infrastructure", "Administration", "Équipements"];
 
