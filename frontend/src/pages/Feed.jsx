@@ -23,14 +23,14 @@ import FiltreBar from '../components/FiltreBar';
 
 const PAGE_SIZE = 6;
 const pageVariants = {
-  hidden: { opacity: 0, y: 14 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.35, ease: 'easeOut' } },
+  hidden: { opacity: 0, y: 10 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.2, ease: [0.16, 1, 0.3, 1] } },
 };
 
 const listVariants = {
   visible: {
     transition: {
-      staggerChildren: 0.055,
+      staggerChildren: 0.02,
     },
   },
 };
@@ -115,7 +115,6 @@ export default function Feed() {
   }, [pseudo]);
 
   const handleVote = async (avisId) => {
-    if (votedAvisIds.includes(avisId)) return;
     setVotingId(avisId);
     try {
       const res = await fetch(`${API_BASE}/api/avis/${avisId}/vote`, {
@@ -129,7 +128,9 @@ export default function Feed() {
       }
       const updatedAvis = await res.json();
       setAvisList((prev) => prev.map((item) => (item.id === avisId ? updatedAvis : item)));
-      setVotedAvisIds((prev) => [...prev, avisId]);
+      setVotedAvisIds((prev) =>
+        prev.includes(avisId) ? prev.filter((id) => id !== avisId) : [...prev, avisId]
+      );
     } catch (err) {
       alert(err.message);
     } finally {
@@ -161,9 +162,9 @@ export default function Feed() {
       className="space-y-7"
     >
       <motion.section
-        initial={{ opacity: 0, y: 18 }}
+        initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.45, ease: 'easeOut' }}
+        transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
         className="surface overflow-hidden"
       >
         <div className="grid gap-0 lg:grid-cols-[1.25fr_0.75fr]">

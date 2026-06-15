@@ -78,18 +78,8 @@ const db = {
       .maybeSingle();
 
     if (checkError) throw checkError;
-    if (existingVote) {
-      throw new Error("Vous avez déjà voté pour cet avis.");
-    }
 
-    // Insert vote
-    const { error: insertError } = await supabase
-      .from('votes')
-      .insert([{ avis_id: avisId, pseudo }]);
-
-    if (insertError) throw insertError;
-
-    // Read current vote count then increment
+    // Read current vote count
     const { data: currentAvis, error: readError } = await supabase
       .from('avis')
       .select('votes')
@@ -98,7 +88,27 @@ const db = {
 
     if (readError) throw readError;
 
-    const newVotesCount = (currentAvis.votes || 0) + 1;
+    let newVotesCount = currentAvis.votes || 0;
+
+    if (existingVote) {
+      // User already voted, so UNVOTE (dévoter)
+      const { error: deleteError } = await supabase
+        .from('votes')
+        .delete()
+        .eq('avis_id', avisId)
+        .eq('pseudo', pseudo);
+
+      if (deleteError) throw deleteError;
+      newVotesCount = Math.max(0, newVotesCount - 1);
+    } else {
+      // User hasn't voted yet, so VOTE
+      const { error: insertError } = await supabase
+        .from('votes')
+        .insert([{ avis_id: avisId, pseudo }]);
+
+      if (insertError) throw insertError;
+      newVotesCount = newVotesCount + 1;
+    }
 
     const { data: updatedAvis, error: updateError } = await supabase
       .from('avis')

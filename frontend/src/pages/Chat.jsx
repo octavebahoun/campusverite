@@ -175,9 +175,9 @@ export default function Chat() {
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 14 }}
+      initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.34, ease: 'easeOut' }}
+      transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
       className="flex h-[calc(100vh-190px)] min-h-[620px] flex-col space-y-4"
     >
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -193,9 +193,9 @@ export default function Chat() {
       </div>
 
       <motion.section
-        initial={{ opacity: 0, y: 16 }}
+        initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.38, ease: 'easeOut' }}
+        transition={{ duration: 0.24, ease: [0.16, 1, 0.3, 1] }}
         className="surface grid min-h-0 flex-1 overflow-hidden lg:grid-cols-[320px_minmax(0,1fr)]"
       >
         <aside className="flex min-h-0 flex-col border-b border-[var(--color-border)] lg:border-b-0 lg:border-r">

@@ -64,11 +64,12 @@ export default function App() {
           <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 md:px-8">
             <Link to="/" className="flex min-w-0 items-center gap-3">
               <motion.span
-                whileHover={{ scale: 1.04 }}
-                whileTap={{ scale: 0.96 }}
-                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-transparent overflow-hidden border border-white/10 shadow-md"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-brand text-white shadow-md"
               >
-                <img src="/logo.webp" alt="CampusVérité" className="h-full w-full object-cover" />
+                <Eye className="h-5 w-5" />
               </motion.span>
               <span className="min-w-0">
                 <span className="block truncate text-base font-extrabold tracking-tight text-white-off">
@@ -138,7 +139,9 @@ export default function App() {
             {/* Branding Column */}
             <div className="space-y-4">
               <div className="flex items-center gap-2">
-                <img src="/logo.webp" alt="Logo" className="h-6 w-6 rounded-md object-cover border border-white/10 shadow-md" />
+                <span className="flex h-7 w-7 items-center justify-center rounded-md bg-[rgba(var(--color-brand-rgb),0.12)] text-brand shadow-sm">
+                  <Eye className="h-4 w-4" />
+                </span>
                 <span className="font-display font-bold text-lg text-white-off tracking-tight">
                   Campus<span className="text-brand">Vérité</span>
                 </span>

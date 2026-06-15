@@ -68,9 +68,9 @@ export default function Soumettre() {
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 14 }}
+      initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.34, ease: 'easeOut' }}
+      transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
       className="mx-auto max-w-5xl space-y-5"
     >
       <Link to="/" className="btn-ghost w-fit">
@@ -80,9 +80,9 @@ export default function Soumettre() {
 
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
         <motion.section
-          initial={{ opacity: 0, y: 18 }}
+          initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.38, ease: 'easeOut' }}
+          transition={{ duration: 0.24, ease: [0.16, 1, 0.3, 1] }}
           className="surface p-5 md:p-7"
         >
           <div className="mb-6">
