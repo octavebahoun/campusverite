@@ -78,4 +78,42 @@ router.delete('/messages/:id', adminAuth, async (req, res) => {
   }
 });
 
+// POST /api/admin/generate-petition — Proxy OpenRouter request
+router.post('/generate-petition', adminAuth, async (req, res) => {
+  const { openRouterKey, model, prompt } = req.body;
+  if (!openRouterKey) {
+    return res.status(400).json({ error: "Clé API OpenRouter manquante." });
+  }
+  if (!model || !prompt) {
+    return res.status(400).json({ error: "Modèle ou prompt manquant." });
+  }
+
+  try {
+    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${openRouterKey.trim()}`,
+        'Content-Type': 'application/json',
+        'HTTP-Referer': 'http://localhost:5173',
+        'X-Title': 'CampusVérité'
+      },
+      body: JSON.stringify({
+        model,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+
+    if (!response.ok) {
+      const errData = await response.json();
+      return res.status(response.status).json({ error: errData.error || { message: "Erreur de communication avec OpenRouter." } });
+    }
+
+    const data = await response.json();
+    res.json(data);
+  } catch (error) {
+    res.status(500).json({ error: { message: error.message || "Erreur interne de génération de pétition." } });
+  }
+});
+
 module.exports = router;
+

@@ -189,17 +189,16 @@ Structure à respecter obligatoirement :
 Reste factuel et constructif. Ne génère aucun autre texte explicatif autour de la lettre, uniquement le document lui-même.`;
 
     try {
-      const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      const res = await fetch(`${API_BASE}/api/admin/generate-petition`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${openRouterKey.trim()}`,
-          'Content-Type': 'application/json',
-          'HTTP-Referer': 'http://localhost:5173',
-          'X-Title': 'CampusVérité'
+          'Authorization': `Bearer ${adminKey.trim()}`,
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
+          openRouterKey: openRouterKey.trim(),
           model: selectedModel,
-          messages: [{ role: 'user', content: prompt }]
+          prompt: prompt
         })
       });
 
