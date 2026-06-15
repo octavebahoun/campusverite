@@ -1,16 +1,43 @@
 # CampusVérité 🔒 — Plateforme de Feedback Étudiant Anonyme & Chat Live
 
-CampusVérité est une application web d'expression libre et de feedback étudiant garantissant un anonymat total. Les étudiants peuvent y poster des avis sous forme de "coups de gueule" ou de "suggestions", voter pour les avis des autres et échanger dans des salons de discussion privés ou groupés en temps réel.
+CampusVérité est une application web d'expression libre, de doléances et de feedback étudiant garantissant un anonymat total. Conçue pour briser les barrières de communication au sein des campus, elle permet aux étudiants de publier des avis ("coups de gueule" ou "suggestions"), de voter ou d'annuler leurs votes sur les sujets prioritaires, et de dialoguer en temps réel via un chat anonyme.
+
+La plateforme intègre également un **espace de modération administrative** sécurisé doté d'outils de **rédaction de pétitions par Intelligence Artificielle** (via OpenRouter) et d'une mise en page d'impression officielle.
+
+---
+
+## ✨ Fonctionnalités Majeures
+
+### 📢 Avis & Feedback Publics (Cahier des charges F1-F6)
+* **Double typologie** : Publication de *Coups de gueule* (problèmes urgents) ou de *Suggestions* (idées constructives).
+* **Catégorisation thématique** : Pédagogie, Infrastructure, Administration, Équipements.
+* **Système de Vote Bidirectionnel (Toggle)** : Possibilité de voter pour un avis utile et d'annuler son vote (dévoter) à tout moment.
+* **Seuil de Pétition automatique** : Dès qu'un avis atteint **10 votes utiles**, il est promu au statut de **🔥 Pétition**.
+* **Signalement citoyen** : Les étudiants peuvent signaler un abus, ce qui masque temporairement le contenu en attendant la modération.
+
+### 💬 Salons de Chat Live & Privés
+* **Communication temps réel** : Propulsée par **Socket.io** pour des échanges instantanés.
+* **Découverte anonyme** : Affichage des pseudos connectés en ligne dans le salon pour les ajouter directement en message privé (DM) ou groupe de discussion.
+* **Anonymat préservé** : Pseudos générés à la volée sous la forme `Animal#Nombre` (ex: `Loup#7312`).
+
+### 🛡️ Backoffice de Modération & IA Administrative
+* **Accès sécurisé** : Protection renforcée par clé d'administration personnelle.
+* **Outils de modération** : Validation des signalements (restaurer le contenu) ou suppression définitive (en cascade sur les votes).
+* **Rédacteur de Pétition IA (OpenRouter)** :
+  - Génération de courriers officiels adressés à la direction académique à partir des avis populaires.
+  - Choix des modèles IA (*Gemini 2.5 Flash*, *Llama 3*, *Mistral*).
+  - Mise en page académique à en-tête officielle avec zone de signature.
+* **Mise en page Print / PDF** : Intégration de règles d'impression CSS (@media print) masquant automatiquement l'interface utilisateur pour ne générer qu'un PDF propre et impeccable.
 
 ---
 
 ## 🛠️ Stack Technique
 
-* **Frontend** : React, Vite, Tailwind CSS v4, Lucide Icons, React Router 7, Socket.io-client.
+* **Frontend** : React, Vite, Tailwind CSS v4, Framer Motion (animations fluides ultra-rapides de 0.18s), Lucide Icons.
 * **Backend** : Node.js, Express, Socket.io.
-* **Base de données principale** : Supabase (PostgreSQL) pour les avis et les votes.
-* **Base de données de chat** : MongoDB (Mongoose) pour les messages et salons.
-* **Temps réel** : Socket.io (WebSocket) pour la messagerie instantanée.
+* **Base de données relationnelle** : Supabase (PostgreSQL) pour la persistance des avis et des votes (avec gestion des clés étrangères et politiques RLS).
+* **Base de données de chat** : MongoDB (Mongoose) pour l'historique des salons et messages.
+* **Passerelle IA** : API OpenRouter.
 
 ---
 
@@ -20,93 +47,85 @@ CampusVérité est une application web d'expression libre et de feedback étudia
 campusverite/
 ├── backend/                 # Serveur Express & WebSockets
 │   ├── models/              # Schémas Mongoose (Room, Message)
-│   ├── routes/              # Routes API (avis, votes, chat)
-│   ├── chatService.js       # Logique de persistance du chat (MongoDB & Fallback mémoire)
-│   ├── supabase.js          # Client Supabase & Fallback mémoire pour Avis/Votes
-│   ├── socket.js            # Gestionnaires d'évènements WebSockets
-│   ├── index.js             # Point d'entrée du serveur
-│   └── package.json
+│   ├── routes/              # Routes API (avis, votes, chat, admin)
+│   ├── chatService.js       # Gestion de la persistance MongoDB
+│   ├── supabase.js          # Client Supabase & Modèles SQL
+│   ├── socket.js            # Évènements WebSockets temps réel
+│   ├── seed.js              # Script d'initialisation de données de démo
+│   └── index.js             # Point d'entrée du serveur
 │
-├── frontend/                # SPA React (Vite)
+├── frontend/                # Application React (Vite)
+│   ├── public/              # Actifs statiques (.webp, logo, favicon)
 │   ├── src/
-│   │   ├── components/      # Composants réutilisables (AvisCard, FiltreBar, MessageBubble)
-│   │   ├── pages/           # Pages de l'application (Feed, Soumettre, Chat)
-│   │   ├── utils/           # Fonctions utilitaires (génération de pseudo aléatoire)
-│   │   ├── App.jsx          # Routage & Mise en page globale
-│   │   ├── index.css        # Import de Tailwind CSS & Styles globaux
-│   │   └── main.jsx
-│   ├── index.html           # Document HTML principal avec meta SEO
-│   └── package.json
+│   │   ├── components/      # AvisCard, FiltreBar, MessageBubble
+│   │   ├── pages/           # Feed, Soumettre, Chat, Admin (Modération & IA)
+│   │   ├── utils/           # Générateur de pseudo session
+│   │   ├── App.jsx          # Shell global & Thème Light/Dark
+│   │   └── index.css        # Variables CSS, Thèmes & Règles d'impression
 │
-├── .env                     # Fichier d'environnement (variables Supabase & MongoDB)
-├── database.sql             # Scripts SQL d'initialisation pour Supabase
+├── database.sql             # Schéma SQL d'initialisation Supabase
 └── README.md
 ```
 
 ---
 
-## ⚙️ Configuration & Lancement Rapide
+## ⚙️ Installation & Lancement
 
-Le backend de CampusVérité est doté d'un **mode de secours en mémoire (fallback)**. Si vous n'avez pas configuré Supabase ou MongoDB, l'application fonctionnera quand même en stockant temporairement les données dans la mémoire vive du serveur. C'est idéal pour tester et faire des démonstrations locales immédiates !
-
-### 1. Installation des Dépendances
-
-Dans le dossier racine, installez les dépendances du serveur et du client :
+### 1. Installation des dépendances
+Installez les dépendances pour les deux parties du projet :
 
 ```bash
-# Installer les dépendances du backend
+# Pour le backend
 cd backend
 pnpm install
 
-# Installer les dépendances du frontend
+# Pour le frontend
 cd ../frontend
 pnpm install
 ```
 
-### 2. Configuration d'environnement (Optionnel)
-
-Renommez ou éditez le fichier `.env` à la racine pour ajouter vos identifiants de base de données :
+### 2. Configuration de l'environnement
+Configurez les variables d'environnement à l'aide d'un fichier `.env` à la racine :
 
 ```env
-# Supabase (PostgreSQL)
+# Supabase
 SUPABASE_URL=votre_url_supabase
-SUPABASE_ANON_KEY=votre_cle_anonyme_supabase
+SUPABASE_ANON_KEY=votre_cle_anonyme
 
 # MongoDB
-MONGO_URI=mongodb+srv://utilisateur:motdepasse@cluster.mongodb.net/campusverite
+MONGO_URI=mongodb+srv://...
 
 # Serveur
 PORT=5000
 ```
 
-### 3. Initialisation Supabase (si configuré)
+### 3. Chargement des données de démonstration (Seed)
+Pour tester immédiatement la plateforme avec des données d'avis réalistes, des votes pré-configurés et des salons de chat actifs, lancez le script de peuplement :
 
-Si vous utilisez Supabase, copiez le contenu du fichier `database.sql` présent à la racine et exécutez-le dans l'onglet **SQL Editor** de votre tableau de bord Supabase pour créer les tables `avis` et `votes` avec leurs politiques d'accès public (RLS).
+```bash
+cd backend
+node seed.js
+```
 
-### 4. Lancement de l'Application
+### 4. Démarrage en développement
+Lancez le backend et le frontend dans deux terminaux séparés :
 
-Ouvrez deux terminaux séparés :
-
-**Terminal 1 : Serveur Backend**
+**Serveur Backend :**
 ```bash
 cd backend
 pnpm dev
 ```
-Le serveur démarrera sur le port `5000` (ou le port défini dans votre `.env`).
 
-**Terminal 2 : Application Frontend**
+**Client Frontend :**
 ```bash
 cd frontend
 pnpm dev
 ```
-L'application Vite démarrera généralement sur `http://localhost:5173`. Ouvrez cette adresse dans votre navigateur.
+L'application s'ouvrira sur `http://localhost:5173`.
 
 ---
 
-## 🔒 Règles d'Anonymat Strictes & Fonctionnalités
-
-1. **Pseudonyme Éphémère** : Généré automatiquement lors de la première visite (`Animal#Nombre`, ex: `Corbeau#4821`) et stocké localement (`localStorage`). Il n'est relié à aucun compte ou adresse IP. Un bouton de réinitialisation dans la barre de navigation permet d'en changer à tout moment.
-2. **Système Anti-double-vote** : Les votes de l'utilisateur sont enregistrés dans Supabase de façon croisée avec le pseudonyme pour éviter les votes multiples, sans révéler d'identité.
-3. **Tableau de chaleur (Heatmap)** : Statistique en temps réel des avis par catégorie pour cibler les points sensibles du campus.
-4. **Système de Pétition** : Dès qu'un avis atteint **10 votes** ou plus, il reçoit automatiquement le badge clignotant **🔥 Pétition**.
-5. **Signalement d'abus** : Permet de signaler un avis inapproprié.
+## 🔒 Sécurité & Conception
+* **Zéro Tracking** : Aucun cookie persistant de tracking. Le pseudonyme de session peut être réinitialisé en un clic depuis le header pour renouveler l'identité numérique.
+* **Cascade d'intégrité** : La suppression d'un avis en modération entraîne la suppression automatique en cascade de tous ses votes associés dans la table `votes`, évitant toute corruption de contraintes.
+* **Optimisation des performances** : Tous les visuels graphiques majeurs utilisent des images WebP optimisées de moins de 150 Ko pour garantir un affichage fluide y compris sur connexions mobiles.

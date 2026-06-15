@@ -33,7 +33,7 @@ export default function Admin() {
   // AI Petition States
   const [selectedAvisForPetition, setSelectedAvisForPetition] = useState(null);
   const [openRouterKey, setOpenRouterKey] = useState(() => localStorage.getItem('cv_openrouter_key') || '');
-  const [selectedModel, setSelectedModel] = useState('google/gemini-2.5-flash');
+  const [selectedModel, setSelectedModel] = useState('google/gemma-4-26b-a4b-it:free');
   const [petitionText, setPetitionText] = useState('');
   const [generatingPetition, setGeneratingPetition] = useState(false);
   const [generationError, setGenerationError] = useState('');
@@ -509,9 +509,9 @@ Reste factuel et constructif. Ne génère aucun autre texte explicatif autour de
                       onChange={(e) => setSelectedModel(e.target.value)}
                       className="input-custom py-1.5 text-xs bg-surface"
                     >
-                      <option value="google/gemini-2.5-flash">Gemini 2.5 Flash (Rapide)</option>
-                      <option value="meta-llama/llama-3-8b-instruct:free">Llama 3 8B Instruct (Gratuit)</option>
-                      <option value="mistralai/mistral-7b-instruct:free">Mistral 7B Instruct (Gratuit)</option>
+                      <option value="google/gemma-4-26b-a4b-it:free">Gemma 4 26B A4B IT (Gratuit)</option>
+                      <option value="openrouter/owl-alpha">Owl Alpha</option>
+                      <option value="nex-agi/nex-n2-pro:free">Nex N2 Pro (Gratuit)</option>
                     </select>
                   </div>
                 </div>
@@ -550,10 +550,10 @@ Reste factuel et constructif. Ne génère aucun autre texte explicatif autour de
                       <button
                         type="button"
                         onClick={() => window.print()}
-                        className="btn-secondary py-1 px-3 text-xs flex items-center gap-1.5"
+                        className="btn-secondary py-1 px-3 text-xs flex items-center gap-1.5 border-brand/20 text-brand"
                       >
                         <Printer className="h-3.5 w-3.5" />
-                        Imprimer / PDF
+                        Imprimer / Télécharger en PDF
                       </button>
                     </div>
 

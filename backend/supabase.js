@@ -36,6 +36,14 @@ const db = {
   },
 
   async deleteAvis(id) {
+    // Supprimer d'abord les votes liés à cet avis pour éviter les violations de clé étrangère
+    const { error: votesError } = await supabase
+      .from('votes')
+      .delete()
+      .eq('avis_id', id);
+
+    if (votesError) throw votesError;
+
     const { data, error } = await supabase
       .from('avis')
       .delete()
