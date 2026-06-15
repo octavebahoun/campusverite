@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { motion } from 'framer-motion';
 import { Building, FileText, Flame, GraduationCap, Lightbulb, SlidersHorizontal, Wrench } from 'lucide-react';
 
 const CATEGORIES = [
@@ -31,7 +32,12 @@ export default function FiltreBar({
   const totalAvis = avisList.length;
 
   return (
-    <div className="space-y-4">
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3, ease: 'easeOut' }}
+      className="space-y-4"
+    >
       <div className="surface p-4 md:p-5">
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-2">
@@ -63,10 +69,12 @@ export default function FiltreBar({
             const isSelected = selectedCategory === category.name;
 
             return (
-              <button
+              <motion.button
                 type="button"
                 key={category.name}
                 onClick={() => setSelectedCategory(isSelected ? null : category.name)}
+                whileHover={{ y: -2 }}
+                whileTap={{ scale: 0.98 }}
                 className={`surface-muted p-3 text-left transition hover:border-[rgba(var(--color-brand-rgb),0.45)] ${isSelected ? 'ring-2 ring-[rgba(var(--color-brand-rgb),0.28)]' : ''}`}
               >
                 <div className="mb-3 flex items-center justify-between gap-2">
@@ -83,7 +91,7 @@ export default function FiltreBar({
                     style={{ width: `${percentage}%` }}
                   />
                 </div>
-              </button>
+              </motion.button>
             );
           })}
         </div>
@@ -128,15 +136,16 @@ export default function FiltreBar({
           })}
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }
 
 function FilterButton({ active, onClick, children }) {
   return (
-    <button
+    <motion.button
       type="button"
       onClick={onClick}
+      whileTap={{ scale: 0.97 }}
       className={`inline-flex min-h-9 items-center gap-2 rounded-md border px-3 py-2 text-sm font-bold transition ${
         active
           ? 'border-brand bg-[rgba(var(--color-brand-rgb),0.1)] text-brand'
@@ -144,6 +153,6 @@ function FilterButton({ active, onClick, children }) {
       }`}
     >
       {children}
-    </button>
+    </motion.button>
   );
 }

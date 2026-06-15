@@ -1,7 +1,9 @@
 /* eslint-disable react-hooks/set-state-in-effect */
 import { useEffect, useMemo, useState } from 'react';
 import { BrowserRouter, Link, NavLink, Route, Routes } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import {
+  Activity,
   Eye,
   FileText,
   MessageSquare,
@@ -61,9 +63,13 @@ export default function App() {
         <header className="topbar">
           <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 md:px-8">
             <Link to="/" className="flex min-w-0 items-center gap-3">
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-transparent overflow-hidden border border-white/10 shadow-md">
-                <img src="/logo.png" alt="CampusVérité" className="h-full w-full object-cover" />
-              </span>
+              <motion.span
+                whileHover={{ scale: 1.04 }}
+                whileTap={{ scale: 0.96 }}
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-transparent overflow-hidden border border-white/10 shadow-md"
+              >
+                <img src="/logo.webp" alt="CampusVérité" className="h-full w-full object-cover" />
+              </motion.span>
               <span className="min-w-0">
                 <span className="block truncate text-base font-extrabold tracking-tight text-white-off">
                   CampusVérité
@@ -132,7 +138,7 @@ export default function App() {
             {/* Branding Column */}
             <div className="space-y-4">
               <div className="flex items-center gap-2">
-                <img src="/logo.png" alt="Logo" className="h-6 w-6 rounded-md object-cover border border-white/10 shadow-md" />
+                <img src="/logo.webp" alt="Logo" className="h-6 w-6 rounded-md object-cover border border-white/10 shadow-md" />
                 <span className="font-display font-bold text-lg text-white-off tracking-tight">
                   Campus<span className="text-brand">Vérité</span>
                 </span>
@@ -140,9 +146,9 @@ export default function App() {
               <p className="text-xs text-muted leading-relaxed">
                 La plateforme libre et anonyme d'échange étudiant. Exprimez-vous en toute sécurité sans laisser d'empreinte numérique.
               </p>
-              <div className="flex items-center gap-1.5 text-[10px] text-green-500 font-mono">
-                <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-                <span>Réseau Opérationnel 🟢</span>
+              <div className="flex items-center gap-1.5 text-[10px] text-success font-mono">
+                <Activity className="h-3.5 w-3.5" />
+                <span>Réseau opérationnel</span>
               </div>
             </div>
 

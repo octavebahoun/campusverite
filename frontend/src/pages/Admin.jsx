@@ -1,5 +1,6 @@
 /* eslint-disable react-hooks/set-state-in-effect, react-hooks/exhaustive-deps */
 import { useEffect, useState } from 'react';
+import { motion } from 'framer-motion';
 import {
   AlertCircle,
   CheckCircle2,
@@ -142,7 +143,12 @@ export default function Admin() {
 
   if (!isAuthenticated) {
     return (
-      <div className="mx-auto max-w-md py-10">
+      <motion.div
+        initial={{ opacity: 0, y: 14 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.32, ease: 'easeOut' }}
+        className="mx-auto max-w-md py-10"
+      >
         <section className="surface p-6 md:p-8">
           <div className="mb-6 text-center">
             <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-md bg-[rgba(var(--color-brand-rgb),0.1)] text-brand">
@@ -174,14 +180,19 @@ export default function Admin() {
             </button>
           </form>
         </section>
-      </div>
+      </motion.div>
     );
   }
 
   const flaggedCount = avisList.filter((item) => item.signale).length;
 
   return (
-    <div className="mx-auto max-w-5xl space-y-5">
+    <motion.div
+      initial={{ opacity: 0, y: 14 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.32, ease: 'easeOut' }}
+      className="mx-auto max-w-5xl space-y-5"
+    >
       <div className="surface flex flex-wrap items-center justify-between gap-3 p-4">
         <div>
           <h1 className="text-xl font-extrabold text-white-off">Tableau de modération</h1>
@@ -193,11 +204,16 @@ export default function Admin() {
         </button>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-3">
+      <motion.div
+        initial="hidden"
+        animate="visible"
+        variants={{ visible: { transition: { staggerChildren: 0.06 } } }}
+        className="grid gap-4 md:grid-cols-3"
+      >
         <Metric icon={ShieldAlert} label="Avis signalés" value={flaggedCount} danger={flaggedCount > 0} />
         <Metric icon={FileText} label="Avis chargés" value={avisList.length} />
         <Metric icon={MessageSquare} label="Messages chargés" value={messagesList.length} />
-      </div>
+      </motion.div>
 
       <div className="surface flex flex-col gap-2 p-2 sm:flex-row">
         <TabButton active={activeTab === 'avis'} onClick={() => setActiveTab('avis')} icon={FileText}>
@@ -234,7 +250,13 @@ export default function Admin() {
           ) : (
             <div className="space-y-3">
               {avisList.map((avis) => (
-                <article key={avis.id} className="surface-muted p-4">
+                <motion.article
+                  key={avis.id}
+                  layout
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="surface-muted p-4"
+                >
                   <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
                     <div className="flex flex-wrap gap-2">
                       <span className={`badge ${avis.type === 'suggestion' ? 'badge-sug' : 'badge-coup'}`}>
@@ -270,7 +292,7 @@ export default function Admin() {
                       Supprimer
                     </button>
                   </div>
-                </article>
+                </motion.article>
               ))}
             </div>
           )
@@ -279,7 +301,13 @@ export default function Admin() {
         ) : (
           <div className="space-y-3">
             {messagesList.map((message) => (
-              <article key={message._id} className="surface-muted p-4">
+              <motion.article
+                key={message._id}
+                layout
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="surface-muted p-4"
+              >
                 <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
                   <div className="min-w-0">
                     <span className="tag-pseudo text-sm">{message.pseudo}</span>
@@ -299,24 +327,30 @@ export default function Admin() {
                 <p className="mt-2 text-right text-xs text-muted">
                   {new Date(message.created_at).toLocaleString('fr-FR')}
                 </p>
-              </article>
+              </motion.article>
             ))}
           </div>
         )}
       </section>
-    </div>
+    </motion.div>
   );
 }
 
 function Metric({ icon: Icon, label, value, danger = false }) {
   return (
-    <div className="surface p-4">
+    <motion.div
+      variants={{
+        hidden: { opacity: 0, y: 10 },
+        visible: { opacity: 1, y: 0, transition: { duration: 0.24 } },
+      }}
+      className="surface p-4"
+    >
       <div className="mb-3 flex items-center justify-between">
         <span className="text-sm font-bold text-muted">{label}</span>
         <Icon className={`h-5 w-5 ${danger ? 'text-[var(--color-danger)]' : 'text-brand'}`} />
       </div>
       <div className={`text-3xl font-extrabold ${danger ? 'text-[var(--color-danger)]' : 'text-white-off'}`}>{value}</div>
-    </div>
+    </motion.div>
   );
 }
 

@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { motion } from 'framer-motion';
 import {
   AlertTriangle,
   Building,
@@ -43,7 +44,15 @@ export default function AvisCard({ avis, onVote, onSignale, hasVoted, isVoting }
   };
 
   return (
-    <article className={`avis-card-custom flex min-h-[230px] flex-col p-5 ${isPetition ? 'animate-petition-border' : ''}`}>
+    <motion.article
+      layout
+      variants={{
+        hidden: { opacity: 0, y: 16 },
+        visible: { opacity: 1, y: 0, transition: { duration: 0.26, ease: 'easeOut' } },
+      }}
+      whileHover={{ y: -3 }}
+      className={`avis-card-custom flex min-h-[230px] flex-col p-5 ${isPetition ? 'animate-petition-border' : ''}`}
+    >
       <div className="mb-4 flex flex-wrap items-start justify-between gap-2">
         <div className="flex flex-wrap gap-2">
           <span className="badge text-muted">
@@ -71,10 +80,11 @@ export default function AvisCard({ avis, onVote, onSignale, hasVoted, isVoting }
       </p>
 
       <div className="mt-auto flex items-center justify-between gap-3 border-t border-[var(--color-soft-border)] pt-4">
-        <button
+        <motion.button
           type="button"
           onClick={handleVoteClick}
           disabled={hasVoted || isVoting || signale}
+          whileTap={{ scale: 0.96 }}
           className={`inline-flex min-h-10 items-center gap-2 rounded-md border px-3 py-2 text-sm font-extrabold transition ${
             hasVoted
               ? 'border-[color-mix(in_srgb,var(--color-success)_34%,transparent)] bg-[color-mix(in_srgb,var(--color-success)_12%,transparent)] text-success'
@@ -84,11 +94,12 @@ export default function AvisCard({ avis, onVote, onSignale, hasVoted, isVoting }
           {hasVoted ? <CheckCircle2 className="h-4 w-4 animate-vote" /> : <ThumbsUp className="h-4 w-4" />}
           <span>{votes}</span>
           <span className="text-xs font-bold">{hasVoted ? 'Voté' : 'Utile'}</span>
-        </button>
+        </motion.button>
 
-        <button
+        <motion.button
           type="button"
           onClick={() => onSignale(id)}
+          whileTap={{ scale: 0.94 }}
           className={`inline-flex h-10 w-10 items-center justify-center rounded-md border transition ${
             signale
               ? 'border-[color-mix(in_srgb,var(--color-danger)_38%,transparent)] bg-[color-mix(in_srgb,var(--color-danger)_10%,transparent)] text-[var(--color-danger)]'
@@ -97,8 +108,8 @@ export default function AvisCard({ avis, onVote, onSignale, hasVoted, isVoting }
           title="Signaler comme abus"
         >
           <AlertTriangle className="h-4 w-4" />
-        </button>
+        </motion.button>
       </div>
-    </article>
+    </motion.article>
   );
 }

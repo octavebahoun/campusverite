@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { motion } from 'framer-motion';
 
 function stringHash(str) {
   let hash = 0;
@@ -31,16 +32,26 @@ export default function MessageBubble({ message, currentPseudo }) {
 
   if (isSystem) {
     return (
-      <div className="my-3 flex justify-center">
+      <motion.div
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="my-3 flex justify-center"
+      >
         <div className="surface-muted px-3 py-2 text-xs font-semibold text-muted">
           {contenu}
         </div>
-      </div>
+      </motion.div>
     );
   }
 
   return (
-    <div className={`my-2 flex w-full items-end gap-2 ${isMe ? 'justify-end' : 'justify-start'}`}>
+    <motion.div
+      layout
+      initial={{ opacity: 0, y: 10, scale: 0.99 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{ duration: 0.2, ease: 'easeOut' }}
+      className={`my-2 flex w-full items-end gap-2 ${isMe ? 'justify-end' : 'justify-start'}`}
+    >
       {!isMe && (
         <div className={`flex h-8 w-8 shrink-0 select-none items-center justify-center rounded-md border text-xs font-extrabold ${avatarStyle}`}>
           {(pseudo || '?').charAt(0)}
@@ -64,6 +75,6 @@ export default function MessageBubble({ message, currentPseudo }) {
           {(pseudo || '?').charAt(0)}
         </div>
       )}
-    </div>
+    </motion.div>
   );
 }

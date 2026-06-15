@@ -1,6 +1,7 @@
 /* eslint-disable react-hooks/set-state-in-effect, react-hooks/exhaustive-deps */
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import { io } from 'socket.io-client';
 import {
   ArrowLeft,
@@ -173,7 +174,12 @@ export default function Chat() {
     : 'Aucun salon';
 
   return (
-    <div className="flex h-[calc(100vh-190px)] min-h-[620px] flex-col space-y-4">
+    <motion.div
+      initial={{ opacity: 0, y: 14 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.34, ease: 'easeOut' }}
+      className="flex h-[calc(100vh-190px)] min-h-[620px] flex-col space-y-4"
+    >
       <div className="flex flex-wrap items-center justify-between gap-3">
         <Link to="/" className="btn-ghost">
           <ArrowLeft className="h-4 w-4" />
@@ -186,7 +192,12 @@ export default function Chat() {
         </div>
       </div>
 
-      <section className="surface grid min-h-0 flex-1 overflow-hidden lg:grid-cols-[320px_minmax(0,1fr)]">
+      <motion.section
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.38, ease: 'easeOut' }}
+        className="surface grid min-h-0 flex-1 overflow-hidden lg:grid-cols-[320px_minmax(0,1fr)]"
+      >
         <aside className="flex min-h-0 flex-col border-b border-[var(--color-border)] lg:border-b-0 lg:border-r">
           <div className="flex items-center justify-between border-b border-[var(--color-border)] p-4">
             <div className="flex items-center gap-2">
@@ -212,10 +223,11 @@ export default function Chat() {
                     : room.membres.filter((item) => item !== pseudo).join(', ') || 'Moi-même';
 
                   return (
-                    <button
+                    <motion.button
                       type="button"
                       key={room._id}
                       onClick={() => setCurrentRoom(room)}
+                      whileTap={{ scale: 0.98 }}
                       className={`w-full rounded-md border p-3 text-left transition ${
                         selected
                           ? 'border-brand bg-[rgba(var(--color-brand-rgb),0.1)]'
@@ -229,7 +241,7 @@ export default function Chat() {
                           <p className="truncate text-xs text-muted">{room.type === 'group' ? room.membres.join(', ') : 'Discussion directe'}</p>
                         </div>
                       </div>
-                    </button>
+                    </motion.button>
                   );
                 })}
               </div>
@@ -246,15 +258,16 @@ export default function Chat() {
                 <p className="text-sm text-muted">Aucun autre pseudonyme en ligne.</p>
               ) : (
                 activeOnlineUsers.map((item) => (
-                  <button
+                  <motion.button
                     type="button"
                     key={item}
                     onClick={() => handleStartDM(item)}
+                    whileTap={{ scale: 0.98 }}
                     className="surface-muted flex w-full items-center justify-between gap-2 p-2 text-left text-sm"
                   >
                     <span className="truncate tag-pseudo">{item}</span>
                     <Plus className="h-4 w-4 text-brand" />
-                  </button>
+                  </motion.button>
                 ))
               )}
             </div>
@@ -313,11 +326,11 @@ export default function Chat() {
             ) : messages.length === 0 ? (
               <p className="py-10 text-center text-sm text-muted">Aucun message dans ce salon.</p>
             ) : (
-              messages.map((msg) => (
-                <div key={msg._id} className="chat-message-anim">
-                  <MessageBubble message={msg} currentPseudo={pseudo} />
-                </div>
-              ))
+              <AnimatePresence initial={false}>
+                {messages.map((msg) => (
+                  <MessageBubble key={msg._id} message={msg} currentPseudo={pseudo} />
+                ))}
+              </AnimatePresence>
             )}
             <div ref={messagesEndRef} />
           </div>
@@ -335,7 +348,7 @@ export default function Chat() {
             </button>
           </form>
         </div>
-      </section>
-    </div>
+      </motion.section>
+    </motion.div>
   );
 }

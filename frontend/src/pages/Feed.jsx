@@ -1,10 +1,13 @@
 /* eslint-disable react-hooks/set-state-in-effect, react-hooks/exhaustive-deps */
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   AlertCircle,
   ArrowRight,
   BarChart3,
+  ChevronLeft,
+  ChevronRight,
   CheckCircle2,
   FileText,
   Megaphone,
@@ -13,16 +16,31 @@ import {
   ThumbsUp,
 } from 'lucide-react';
 import { API_BASE } from '../config';
-import heroImage from '../assets/hero.png';
+import heroImage from '../assets/hero.webp';
 import { getOrCreatePseudo, resetPseudo } from '../utils/pseudo';
 import AvisCard from '../components/AvisCard';
 import FiltreBar from '../components/FiltreBar';
+
+const PAGE_SIZE = 6;
+const pageVariants = {
+  hidden: { opacity: 0, y: 14 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.35, ease: 'easeOut' } },
+};
+
+const listVariants = {
+  visible: {
+    transition: {
+      staggerChildren: 0.055,
+    },
+  },
+};
 
 export default function Feed() {
   const [avisList, setAvisList] = useState([]);
   const [votedAvisIds, setVotedAvisIds] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [selectedType, setSelectedType] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [votingId, setVotingId] = useState(null);
   const [error, setError] = useState(null);
@@ -43,6 +61,15 @@ export default function Feed() {
       .sort((a, b) => (b.votes || 0) - (a.votes || 0))
       .slice(0, 3)
   ), [avisList]);
+
+  const totalPages = Math.max(1, Math.ceil(avisList.length / PAGE_SIZE));
+  const paginatedAvis = useMemo(() => {
+    const start = (currentPage - 1) * PAGE_SIZE;
+    return avisList.slice(start, start + PAGE_SIZE);
+  }, [avisList, currentPage]);
+
+  const paginationStart = avisList.length === 0 ? 0 : (currentPage - 1) * PAGE_SIZE + 1;
+  const paginationEnd = Math.min(currentPage * PAGE_SIZE, avisList.length);
 
   const fetchAvis = async () => {
     setLoading(true);
@@ -75,8 +102,13 @@ export default function Feed() {
   };
 
   useEffect(() => {
+    setCurrentPage(1);
     fetchAvis();
   }, [selectedCategory, selectedType]);
+
+  useEffect(() => {
+    if (currentPage > totalPages) setCurrentPage(totalPages);
+  }, [currentPage, totalPages]);
 
   useEffect(() => {
     fetchVotes();
@@ -122,8 +154,18 @@ export default function Feed() {
   };
 
   return (
-    <div className="space-y-7">
-      <section className="surface overflow-hidden">
+    <motion.div
+      variants={pageVariants}
+      initial="hidden"
+      animate="visible"
+      className="space-y-7"
+    >
+      <motion.section
+        initial={{ opacity: 0, y: 18 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.45, ease: 'easeOut' }}
+        className="surface overflow-hidden"
+      >
         <div className="grid gap-0 lg:grid-cols-[1.25fr_0.75fr]">
           <div className="p-6 md:p-8 lg:p-10">
             <div className="mb-5 flex flex-wrap gap-2">
@@ -157,18 +199,23 @@ export default function Feed() {
 
           <div
             className="hero-image min-h-[260px] border-t border-[var(--color-border)] lg:border-l lg:border-t-0"
-            style={{ backgroundImage: `linear-gradient(180deg, rgba(15, 118, 110, 0.08), rgba(15, 118, 110, 0.26)), url(${heroImage})` }}
+            style={{ backgroundImage: "url('/banner.webp')", backgroundSize: 'cover', backgroundPosition: 'center' }}
             aria-hidden="true"
           />
         </div>
-      </section>
+      </motion.section>
 
-      <section className="grid gap-4 md:grid-cols-4">
+      <motion.section
+        variants={listVariants}
+        initial="hidden"
+        animate="visible"
+        className="grid gap-4 md:grid-cols-4"
+      >
         <Metric icon={FileText} label="Avis publiés" value={stats.totalAvis} />
         <Metric icon={ThumbsUp} label="Votes utiles" value={stats.totalVotes} />
         <Metric icon={Megaphone} label="Pétitions" value={stats.petitions} />
         <Metric icon={AlertCircle} label="Signalés" value={stats.signales} />
-      </section>
+      </motion.section>
 
       <section className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
         <div className="space-y-5">
@@ -195,7 +242,9 @@ export default function Feed() {
             <div>
               <h2 className="text-lg font-extrabold text-white-off">Fil public</h2>
               <p className="text-sm text-muted">
-                Du plus récent au plus ancien, selon les filtres actifs.
+                {avisList.length > 0
+                  ? `${paginationStart}-${paginationEnd} sur ${avisList.length} avis`
+                  : 'Du plus récent au plus ancien, selon les filtres actifs.'}
               </p>
             </div>
             <button type="button" onClick={fetchAvis} disabled={loading} className="btn-secondary">
@@ -205,7 +254,7 @@ export default function Feed() {
           </div>
 
           {loading && avisList.length === 0 ? (
-            <div className="grid gap-4 md:grid-cols-2">
+            <div className="space-y-4">
               {[1, 2, 3, 4].map((idx) => (
                 <div key={idx} className="surface h-48 animate-pulse p-5">
                   <div className="mb-5 h-6 w-2/3 rounded bg-[var(--color-elevated)]" />
@@ -231,18 +280,37 @@ export default function Feed() {
               </button>
             </div>
           ) : (
-            <div className="grid gap-4 md:grid-cols-2">
-              {avisList.map((avis) => (
-                <AvisCard
-                  key={avis.id}
-                  avis={avis}
-                  onVote={handleVote}
-                  onSignale={handleSignale}
-                  hasVoted={votedAvisIds.includes(avis.id)}
-                  isVoting={votingId === avis.id}
-                />
-              ))}
-            </div>
+            <>
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={`${selectedCategory || 'all'}-${selectedType || 'all'}-${currentPage}`}
+                  variants={listVariants}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0, transition: { staggerChildren: 0.06 } }}
+                  exit={{ opacity: 0, y: -8, transition: { duration: 0.16 } }}
+                  className="space-y-4"
+                >
+                  {paginatedAvis.map((avis) => (
+                    <AvisCard
+                      key={avis.id}
+                      avis={avis}
+                      onVote={handleVote}
+                      onSignale={handleSignale}
+                      hasVoted={votedAvisIds.includes(avis.id)}
+                      isVoting={votingId === avis.id}
+                    />
+                  ))}
+                </motion.div>
+              </AnimatePresence>
+
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={setCurrentPage}
+                totalItems={avisList.length}
+                pageSize={PAGE_SIZE}
+              />
+            </>
           )}
         </div>
 
@@ -297,18 +365,85 @@ export default function Feed() {
           </div>
         </aside>
       </section>
-    </div>
+    </motion.div>
   );
 }
 
 function Metric({ icon: Icon, label, value }) {
   return (
-    <div className="surface p-4">
+    <motion.div
+      variants={{
+        hidden: { opacity: 0, y: 12 },
+        visible: { opacity: 1, y: 0, transition: { duration: 0.28, ease: 'easeOut' } },
+      }}
+      whileHover={{ y: -2 }}
+      className="surface p-4"
+    >
       <div className="mb-3 flex items-center justify-between">
         <span className="text-sm font-bold text-muted">{label}</span>
         <Icon className="h-5 w-5 text-brand" />
       </div>
       <div className="text-3xl font-extrabold tracking-tight text-white-off">{value}</div>
-    </div>
+    </motion.div>
+  );
+}
+
+function Pagination({ currentPage, totalPages, onPageChange, totalItems, pageSize }) {
+  if (totalItems <= pageSize) return null;
+
+  const pages = Array.from({ length: totalPages }, (_, index) => index + 1);
+
+  return (
+    <motion.nav
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.22 }}
+      className="surface flex flex-col gap-3 p-3 sm:flex-row sm:items-center sm:justify-between"
+      aria-label="Pagination des avis"
+    >
+      <p className="text-sm font-semibold text-muted">
+        Page {currentPage} sur {totalPages}
+      </p>
+
+      <div className="flex flex-wrap items-center gap-2">
+        <button
+          type="button"
+          onClick={() => onPageChange(Math.max(1, currentPage - 1))}
+          disabled={currentPage === 1}
+          className="btn-secondary h-10 px-3"
+        >
+          <ChevronLeft className="h-4 w-4" />
+          Précédent
+        </button>
+
+        <div className="flex flex-wrap gap-1">
+          {pages.map((page) => (
+            <button
+              type="button"
+              key={page}
+              onClick={() => onPageChange(page)}
+              className={`inline-flex h-10 min-w-10 items-center justify-center rounded-md border px-3 text-sm font-extrabold transition ${
+                page === currentPage
+                  ? 'border-brand bg-[rgba(var(--color-brand-rgb),0.1)] text-brand'
+                  : 'border-[var(--color-border)] text-muted hover:border-[rgba(var(--color-brand-rgb),0.45)] hover:text-brand'
+              }`}
+              aria-current={page === currentPage ? 'page' : undefined}
+            >
+              {page}
+            </button>
+          ))}
+        </div>
+
+        <button
+          type="button"
+          onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
+          disabled={currentPage === totalPages}
+          className="btn-secondary h-10 px-3"
+        >
+          Suivant
+          <ChevronRight className="h-4 w-4" />
+        </button>
+      </div>
+    </motion.nav>
   );
 }
