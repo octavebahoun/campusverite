@@ -6,6 +6,14 @@ La plateforme intègre également un **espace de modération administrative** s�
 
 ---
 
+## 🎥 Démo Vidéo de Présentation
+
+Découvrez les fonctionnalités de **CampusVérité** en action dans cette présentation de 30 secondes :
+
+<video src="assets/presentation.mp4" width="100%" controls muted autoplay loop></video>
+
+---
+
 ## ✨ Fonctionnalités Majeures
 
 ### 📢 Avis & Feedback Publics (Cahier des charges F1-F6)
