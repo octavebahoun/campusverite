@@ -127,7 +127,10 @@ export default function Admin() {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${adminKey}` },
       });
-      if (!res.ok) throw new Error('Erreur lors de la suppression.');
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.error || 'Erreur lors de la suppression.');
+      }
       setAvisList((prev) => prev.filter((item) => item.id !== id));
     } catch (err) {
       alert(err.message);

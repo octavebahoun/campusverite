@@ -48,3 +48,9 @@ CREATE POLICY "Allow public read votes" ON votes FOR SELECT USING (true);
 
 -- Policy to insert votes (public access)
 CREATE POLICY "Allow public insert votes" ON votes FOR INSERT WITH CHECK (true);
+
+-- Policy to delete avis (public access, required for admin deletion)
+CREATE POLICY "Allow public delete avis" ON avis FOR DELETE USING (true);
+
+-- Policy to delete votes (public access, required for unvoting and admin cascade)
+CREATE POLICY "Allow public delete votes" ON votes FOR DELETE USING (true);

@@ -48,10 +48,16 @@ const db = {
       .from('avis')
       .delete()
       .eq('id', id)
-      .select()
-      .single();
+      .select();
+
     if (error) throw error;
-    return data;
+
+    if (!data || data.length === 0) {
+      throw new Error(
+        "L'avis n'a pas pu être supprimé. RLS (Row Level Security) est activé sur Supabase mais aucune politique n'autorise la suppression (DELETE) pour la clé Anon. Veuillez désactiver RLS ou ajouter des politiques DELETE dans l'éditeur SQL Supabase."
+      );
+    }
+    return data[0];
   },
 
   async unflagAvis(id) {
