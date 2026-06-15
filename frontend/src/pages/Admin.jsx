@@ -273,6 +273,11 @@ Reste factuel et constructif. Ne génère aucun autre texte explicatif autour de
       className="mx-auto max-w-7xl space-y-5"
     >
       <style>{`
+        @media screen {
+          #printable-petition {
+            display: none !important;
+          }
+        }
         @media print {
           body * {
             visibility: hidden;
@@ -293,6 +298,7 @@ Reste factuel et constructif. Ne génère aucun autre texte explicatif autour de
             line-height: 1.6 !important;
             border: none !important;
             box-shadow: none !important;
+            display: block !important;
           }
           .no-print {
             display: none !important;
@@ -561,7 +567,7 @@ Reste factuel et constructif. Ne génère aucun autre texte explicatif autour de
 
                     {/* Printable area */}
                     <div
-                      id="printable-petition"
+                      id="preview-petition"
                       className="border border-[var(--color-border)] bg-white text-black p-6 rounded-md whitespace-pre-wrap font-serif text-sm shadow-inner max-h-[300px] overflow-y-auto"
                     >
                       {petitionText}
@@ -576,7 +582,7 @@ Reste factuel et constructif. Ne génère aucun autre texte explicatif autour de
 
       {/* Hidden printable target container (so print contains only the letter and not the app layout) */}
       {selectedAvisForPetition && petitionText && (
-        <div id="printable-petition" className="hidden">
+        <div id="printable-petition" className="whitespace-pre-wrap">
           {petitionText}
         </div>
       )}
